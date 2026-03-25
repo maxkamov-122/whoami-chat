@@ -135,22 +135,29 @@
         loadMessages();
     }
 
-    function pushMsg() {
+    // --- 110-qatordan boshlab oxirigacha HAMMA SCRIPTNI O'CHIRIB SHUNI QO'Y ---
+
+function pushMsg() {
     const i = document.getElementById('msg-in');
     const n = document.getElementById('nick-in').value;
     if(i.value.trim() !== "") {
-        const encrypted = CryptoJS.AES.encrypt(i.value, secretKey).toString();
-        db.ref('messages').push({
-            u: n,
-            t: encrypted,
-            a: activeAv,
-            r: myRole
-        });
-        i.value = ""; 
+        try {
+            // Xabarni shifrlash
+            const encrypted = CryptoJS.AES.encrypt(i.value, secretKey).toString();
+            db.ref('messages').push({
+                u: n,
+                t: encrypted,
+                a: activeAv,
+                r: myRole,
+                time: Date.now()
+            });
+            i.value = ""; // Inputni tozalash
+        } catch(e) { console.error("Yuborishda xato!"); }
     }
 }
 
 function loadMessages() {
+    // Bazadan xabarlarni real vaqtda olish
     db.ref('messages').limitToLast(50).on('child_added', (s) => {
         const m = s.val();
         try {
@@ -163,6 +170,7 @@ function loadMessages() {
     });
 }
 
+// Xabarni ekranga chiqarish (ASOSIY FUNKSIYA)
 function printMsg(u, t, av, role) {
     const c = document.getElementById('chat-container');
     const d = document.createElement('div');
@@ -172,7 +180,7 @@ function printMsg(u, t, av, role) {
     let name = u;
     let finalAv = av;
 
-    // Admin va Helperlarni tekshirish (Dizaynga moslab)
+    // Admin va Helperlarni aniqlash
     if(u === "x-gab") { 
         cls = "super-glow"; 
         name = "ADMIN x-gab"; 
@@ -185,12 +193,38 @@ function printMsg(u, t, av, role) {
 
     d.innerHTML = `<span>${finalAv}</span> <div><b class="${cls}">${name}:</b><br><span>${t}</span></div>`;
     c.appendChild(d);
-    c.scrollTop = c.scrollHeight; // Har doim oxiriga tushadi
+    c.scrollTop = c.scrollHeight; // Har doim oxirgi xabarni ko'rsatish
 }
-    document.getElementById('msg-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') pushMsg(); });
-    function toggleAdm() { const p = document.getElementById('admin-panel'); p.style.display = (p.style.display === "block") ? "none" : "block"; if(myRole === "sub") document.getElementById('root-only').style.display = "none"; }
-    function clearChat() { db.ref('messages').remove(); document.getElementById('chat-container').innerHTML = ""; toggleAdm(); }
-    function addHelper() { const n = document.getElementById('new-adm-nick').value; const p = document.getElementById('new-adm-pass').value; if(n && p) db.ref('helpers/' + n).set({pass: p}); alert("Admin qo'shildi!"); }
+
+// Enter tugmasi sozlamasi
+document.getElementById('msg-in').addEventListener('keypress', (e) => { 
+    if(e.key === 'Enter') pushMsg(); 
+});
+
+function toggleAdm() {
+    const p = document.getElementById('admin-panel');
+    p.style.display = (p.style.display === "block") ? "none" : "block";
+    if(myRole === "sub") document.getElementById('root-only').style.display = "none";
+}
+
+function clearChat() { 
+    if(confirm("Chatni butunlay tozalamoqchimisiz?")) {
+        db.ref('messages').remove(); 
+        document.getElementById('chat-container').innerHTML = ""; 
+        toggleAdm(); 
+    }
+}
+
+function addHelper() {
+    const n = document.getElementById('new-adm-nick').value;
+    const p = document.getElementById('new-adm-pass').value;
+    if(n && p) {
+        db.ref('helpers/' + n).set({pass: p});
+        alert("Yordamchi admin qo'shildi: " + n);
+        document.getElementById('new-adm-nick').value = "";
+        document.getElementById('new-adm-pass').value = "";
+    }
+}
 </script>
 </body>
 </html>
