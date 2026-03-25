@@ -136,40 +136,57 @@
     }
 
     function pushMsg() {
-        const i = document.getElementById('msg-in');
-        if(i.value.trim() !== "") {
-            const encrypted = CryptoJS.AES.encrypt(i.value, secretKey).toString();
-            db.ref('messages').push({
-                u: document.getElementById('nick-in').value,
-                t: encrypted,
-                a: activeAv
-            });
-            i.value = "";
-        }
-    }
-
-    function loadMessages() {
-        db.ref('messages').limitToLast(50).on('child_added', (s) => {
-            const m = s.val();
-            const decrypted = CryptoJS.AES.decrypt(m.t, secretKey).toString(CryptoJS.enc.Utf8);
-            printMsg(m.u, decrypted, m.a);
+    const i = document.getElementById('msg-in');
+    const n = document.getElementById('nick-in').value;
+    if(i.value.trim() !== "") {
+        const encrypted = CryptoJS.AES.encrypt(i.value, secretKey).toString();
+        db.ref('messages').push({
+            u: n,
+            t: encrypted,
+            a: activeAv,
+            r: myRole
         });
+        i.value = ""; 
+    }
+}
+
+function loadMessages() {
+    db.ref('messages').limitToLast(50).on('child_added', (s) => {
+        const m = s.val();
+        try {
+            const bytes = CryptoJS.AES.decrypt(m.t, secretKey);
+            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+            if (decrypted) {
+                printMsg(m.u, decrypted, m.a, m.r);
+            }
+        } catch(e) { console.error("Shifrlash xatosi!"); }
+    });
+}
+
+function printMsg(u, t, av, role) {
+    const c = document.getElementById('chat-container');
+    const d = document.createElement('div');
+    d.className = 'msg';
+    
+    let cls = "";
+    let name = u;
+    let finalAv = av;
+
+    // Admin va Helperlarni tekshirish (Dizaynga moslab)
+    if(u === "x-gab") { 
+        cls = "super-glow"; 
+        name = "ADMIN x-gab"; 
+        finalAv = "👑";
+    } else if(helpers && helpers[u]) { 
+        cls = "sub-glow"; 
+        name = "HELPER " + u; 
+        finalAv = "💀";
     }
 
-    function printMsg(u, t, av) {
-        const c = document.getElementById('chat-container');
-        const d = document.createElement('div');
-        d.className = 'msg';
-        let cls = "";
-        let name = u;
-        if(u === "x-gab") { cls = "super-glow"; name = "ADMIN " + u; av = "👑"; }
-        else if(helpers[u]) { cls = "sub-glow"; name = "HELPER " + u; av = "💀"; }
-
-        d.innerHTML = `<span>${av}</span> <div><b class="${cls}">${name}:</b><br><span>${t}</span></div>`;
-        c.appendChild(d);
-        c.scrollTop = c.scrollHeight;
-    }
-
+    d.innerHTML = `<span>${finalAv}</span> <div><b class="${cls}">${name}:</b><br><span>${t}</span></div>`;
+    c.appendChild(d);
+    c.scrollTop = c.scrollHeight; // Har doim oxiriga tushadi
+}
     document.getElementById('msg-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') pushMsg(); });
     function toggleAdm() { const p = document.getElementById('admin-panel'); p.style.display = (p.style.display === "block") ? "none" : "block"; if(myRole === "sub") document.getElementById('root-only').style.display = "none"; }
     function clearChat() { db.ref('messages').remove(); document.getElementById('chat-container').innerHTML = ""; toggleAdm(); }
