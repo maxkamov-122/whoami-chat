@@ -4,140 +4,203 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WHOAMI SEC | C2 Hidden Node</title>
-    <!-- Telegram Web App Script -->
-    <script src="https://telegram.org"></script>
+    <!-- Shifrlash kutubxonasi -->
+    <script src="https://cloudflare.com"></script>
     <style>
         :root { --neon: #00ff41; --super: #ff003c; --sub: #00d4ff; }
         * { box-sizing: border-box; cursor: crosshair; transition: 0.3s; }
-        body { background: radial-gradient(circle, #0f0f0f 0%, #000 100%); color: var(--neon); font-family: 'Courier New', monospace; height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        .glass-panel { background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 12px; width: 95%; max-width: 500px; height: 90vh; display: flex; flex-direction: column; padding: 25px; box-shadow: 0 0 40px rgba(0, 255, 65, 0.1); }
         
-        /* ADMIN VA HELPER NEON EFFEKTI (SENIKI) */
-        @keyframes admin-blink { 0%, 100% { text-shadow: 0 0 20px var(--super); color: var(--super); opacity: 1; } 50% { opacity: 0.5; text-shadow: none; } }
-        .super-glow { animation: admin-blink 1s infinite !important; font-weight: bold; }
+        body { 
+            background: radial-gradient(circle, #0f0f0f 0%, #000 100%);
+            color: var(--neon); font-family: 'Courier New', monospace;
+            height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
 
-        h2 { text-align: center; letter-spacing: 8px; text-shadow: 0 0 10px var(--neon); }
-        input, button { background: rgba(0, 0, 0, 0.7); border: 1px solid var(--neon); color: var(--neon); padding: 12px; margin: 8px 0; border-radius: 8px; outline: none; }
-        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); font-weight: bold; }
-        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; scroll-behavior: smooth; }
-        .msg { margin: 12px 0; font-size: 0.9em; border-left: 1px solid rgba(0, 255, 65, 0.3); padding-left: 10px; }
-        #admin-panel { display: none; position: absolute; top: 15%; left: 50%; transform: translateX(-50%); background: rgba(5, 5, 5, 0.98); border: 1px solid var(--super); padding: 20px; border-radius: 12px; z-index: 100; width: 280px; box-shadow: 0 0 30px var(--super); }
+        .glass-panel {
+            background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 12px;
+            width: 95%; max-width: 500px; height: 90vh;
+            display: flex; flex-direction: column; padding: 25px;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.1);
+            position: relative;
+        }
+
+        /* Neon Effektlari */
+        @keyframes admin-blink { 0%, 100% { text-shadow: 0 0 20px var(--super); color: var(--super); } 50% { opacity: 0.5; } }
+        @keyframes helper-blink { 0%, 100% { text-shadow: 0 0 20px var(--sub); color: var(--sub); } 50% { opacity: 0.6; } }
+
+        .super-glow { animation: admin-blink 1s infinite !important; font-weight: bold; }
+        .sub-glow { animation: helper-blink 1.5s infinite !important; font-weight: bold; }
+
+        h2 { text-align: center; letter-spacing: 8px; text-shadow: 0 0 10px var(--neon); margin-top: 0; }
+        input, button { 
+            background: rgba(0, 0, 0, 0.7); border: 1px solid var(--neon); 
+            color: var(--neon); padding: 12px; margin: 8px 0; border-radius: 8px; outline: none;
+            width: 100%;
+        }
+        button { cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
+
+        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; scroll-behavior: smooth; padding-right: 5px; }
+        .msg { margin: 12px 0; font-size: 0.9em; border-left: 1px solid rgba(0, 255, 65, 0.3); padding-left: 10px; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Admin Panel Overlay */
+        #admin-panel { 
+            display: none; position: absolute; top: 15%; left: 50%; transform: translateX(-50%);
+            background: rgba(5, 5, 5, 0.98); border: 1px solid var(--super);
+            padding: 20px; border-radius: 12px; z-index: 100; width: 280px; box-shadow: 0 0 30px var(--super);
+        }
+
+        .av-opt { cursor: pointer; font-size: 2em; transition: 0.2s; }
+        .av-opt:hover { transform: scale(1.2); text-shadow: 0 0 15px var(--neon); }
     </style>
 </head>
 <body>
 
 <div class="glass-panel">
-    <!-- LOGIN (ESKI DIZAYN) -->
+    <!-- LOGIN SCREEN -->
     <div id="login-scr" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
         <h2>[ WHOAMI SEC ]</h2>
-        <div style="display:flex; justify-content:center; gap:15px; font-size:2em; margin-bottom:15px;">
-            <span class="av-opt" onclick="setAv('👤', this)" style="cursor:pointer">👤</span>
-            <span class="av-opt" onclick="setAv('🤖', this)" style="cursor:pointer">🤖</span>
-            <span class="av-opt" onclick="setAv('🕶️', this)" style="cursor:pointer">🕶️</span>
+        <div style="display:flex; justify-content:center; gap:15px; margin-bottom:20px;">
+            <span class="av-opt" onclick="setAv('👤', this)">👤</span>
+            <span class="av-opt" onclick="setAv('🤖', this)">🤖</span>
+            <span class="av-opt" onclick="setAv('🕶️', this)">🕶️</span>
         </div>
-        <input type="text" id="nick-in" placeholder="Identifikator (Nik)..." oninput="checkAdmin(this.value)">
+        <input type="text" id="nick-in" placeholder="Identifikator (Nik)..." oninput="checkAdminFlow(this.value)">
+        
+        <!-- Yashirin Parol Maydoni -->
         <div id="pass-box" style="display:none;">
-            <input type="password" id="pass-in" placeholder="Admin Parol (2011)..." style="width:100%">
+            <input type="password" id="pass-in" placeholder="MAXFIY KALIT (2011)..." style="border-color: var(--super);">
         </div>
-        <button onclick="launch()">TIZIMNI YUKLASH</button>
+        
+        <button onclick="launchSystem()">TIZIMNI YUKLASH</button>
     </div>
 
-    <!-- CHAT (ESKI DIZAYN) -->
+    <!-- CHAT SCREEN -->
     <div id="chat-scr" style="display:none; flex-direction: column; height: 100%;">
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.7em;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.7em; margin-bottom: 10px;">
             <span id="led">🟢 E2E_ENCRYPTION: ON</span>
-            <button id="adm-btn" style="display:none; padding:2px 8px;" onclick="toggleAdm()">CMD_PANEL</button>
+            <button id="adm-btn" style="display:none; padding:2px 8px; width: auto; font-size:10px; border-color: var(--super); color: var(--super);" onclick="toggleAdminPanel()">CMD_PANEL</button>
         </div>
         <div id="chat-container"></div>
         <div style="display:flex; gap:8px;">
-            <input type="text" id="msg-in" style="flex-grow:1" placeholder="Xabar yozing...">
-            <button onclick="pushMsg()" style="width:50px">></button>
+            <input type="text" id="msg-in" style="flex-grow:1" placeholder="Shifrlangan xabar...">
+            <button onclick="sendMessage()" style="width:50px">></button>
         </div>
     </div>
 
     <!-- ADMIN PANEL -->
     <div id="admin-panel">
-        <h4 class="super-glow" style="text-align:center">[ ROOT CONTROL ]</h4>
-        <button onclick="clearChat()" style="width:100%">Chatni Tozalash</button>
-        <button onclick="toggleAdm()" style="width:100%; margin-top:10px; border-color:#555">Yopish</button>
+        <h4 class="super-glow" style="margin:0 0 15px 0; text-align:center">[ ROOT CONTROL ]</h4>
+        <button onclick="clearChat()">Chatni Tozalash</button>
+        <button onclick="toggleAdminPanel()" style="border-color:#555; color: #888; margin-top: 10px;">Yopish</button>
     </div>
 </div>
 
 <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
     let activeAv = "👤";
     let myRole = "user";
+    const secretKey = "XGAB_SECURE_2026"; // Shifrlash uchun ichki kalit
 
+    // Avatar tanlash
     function setAv(av, el) {
         activeAv = av;
         document.querySelectorAll('.av-opt').forEach(a => a.style.textShadow = "none");
-        el.style.textShadow = "0 0 15px var(--neon)";
+        el.style.textShadow = "0 0 20px var(--neon)";
     }
 
-    function checkAdmin(v) {
-        document.getElementById('pass-box').style.display = (v === "x-gab") ? "block" : "none";
+    // Admin nik yozilsa parol maydonini ochish
+    function checkAdminFlow(v) {
+        const pBox = document.getElementById('pass-box');
+        if(v.toLowerCase() === "x-gab") {
+            pBox.style.display = "block";
+        } else {
+            pBox.style.display = "none";
+        }
     }
 
-    function launch() {
-        const n = document.getElementById('nick-in').value;
-        const p = document.getElementById('pass-in').value;
-        if(!n) return;
+    // Tizimga kirish
+    function launchSystem() {
+        const nick = document.getElementById('nick-in').value;
+        const pass = document.getElementById('pass-in').value;
 
-        if(n === "x-gab" && p === "2011") {
-            myRole = "super";
-            activeAv = "👑";
-            document.getElementById('adm-btn').style.display = "block";
+        if(!nick) { alert("Nik kiriting!"); return; }
+
+        // Admin tekshiruvi
+        if(nick.toLowerCase() === "x-gab") {
+            if(pass === "2011") {
+                myRole = "super";
+                activeAv = "👑";
+                document.getElementById('adm-btn').style.display = "block";
+            } else {
+                alert("KALIT NOTOGRI!");
+                return;
+            }
         }
 
         document.getElementById('login-scr').style.display = "none";
         document.getElementById('chat-scr').style.display = "flex";
-        printMsg("SYSTEM", "Aloqa o'rnatildi. Barcha izlar o'chirildi.");
+        
+        addSystemMsg("Tizimga ulanish muvaffaqiyatli. Anonimlik ta'minlandi.");
     }
 
-    function pushMsg() {
-        const i = document.getElementById('msg-in');
-        const n = document.getElementById('nick-in').value;
-        if(i.value.trim()) {
-            // Xabarni Telegram botiga yuboramiz
-            tg.sendData(JSON.stringify({
-                user: n,
-                text: i.value,
-                avatar: activeAv,
-                role: myRole
-            }));
-            
-            // O'zimizga ham chiqarib qo'yamiz
-            printMsg(n, i.value, activeAv, myRole);
-            i.value = "";
+    // Xabar yuborish
+    function sendMessage() {
+        const input = document.getElementById('msg-in');
+        const text = input.value.trim();
+        const nick = document.getElementById('nick-in').value;
+
+        if(text) {
+            // CryptoJS bilan shifrlash simulyatsiyasi
+            const encrypted = CryptoJS.AES.encrypt(text, secretKey).toString();
+            displayMessage(nick, text, activeAv, myRole);
+            input.value = "";
         }
     }
 
-    function printMsg(u, t, av, role) {
-        const c = document.getElementById('chat-container');
-        const d = document.createElement('div');
-        d.className = 'msg';
-        let cls = (u === "x-gab") ? "super-glow" : "";
-        let name = (u === "x-gab") ? "ADMIN " + u : u;
-        let icon = (u === "x-gab") ? "👑" : av;
+    // Xabarni ekranda ko'rsatish
+    function displayMessage(u, t, av, role) {
+        const container = document.getElementById('chat-container');
+        const div = document.createElement('div');
+        div.className = 'msg';
+        
+        let nameClass = "";
+        let displayName = u;
 
-        d.innerHTML = `<span>${icon}</span> <div><b class="${cls}">${name}:</b><br><span>${t}</span></div>`;
-        c.appendChild(d);
-        c.scrollTop = c.scrollHeight;
+        if(u.toLowerCase() === "x-gab") {
+            nameClass = "super-glow";
+            displayName = "ADMIN " + u;
+            av = "👑";
+        }
+
+        div.innerHTML = `<span>${av}</span> <div><b class="${nameClass}">${displayName}:</b><br><span>${t}</span></div>`;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
     }
 
-    function toggleAdm() {
+    function addSystemMsg(t) {
+        const container = document.getElementById('chat-container');
+        container.innerHTML += `<div class="msg" style="border-color: #555; color: #555;">[SYSTEM]: ${t}</div>`;
+    }
+
+    // ENTER tugmasini kuzatish
+    document.getElementById('msg-in').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') sendMessage();
+    });
+
+    // Admin Panel funksiyalari
+    function toggleAdminPanel() {
         const p = document.getElementById('admin-panel');
         p.style.display = (p.style.display === "block") ? "none" : "block";
     }
 
     function clearChat() {
         document.getElementById('chat-container').innerHTML = "";
-        toggleAdm();
+        addSystemMsg("Chat admin tomonidan tozalandi.");
+        toggleAdminPanel();
     }
-
-    document.getElementById('msg-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') pushMsg(); });
 </script>
 </body>
 </html>
