@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHOAMI SEC | C2 Hidden Node</title>
+    <script src="https://cloudflare.com"></script>
+    <style>
+        :root { --neon: #00ff41; --super: #ff003c; --sub: #00d4ff; }
+        * { box-sizing: border-box; cursor: crosshair; transition: 0.3s; }
+        
+        body { 
+            background: radial-gradient(circle, #0f0f0f 0%, #000 100%);
+            color: var(--neon); font-family: 'Courier New', monospace;
+            height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center;
+        }
+
+        .glass-panel {
+            background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 12px;
+            width: 95%; max-width: 500px; height: 90vh;
+            display: flex; flex-direction: column; padding: 25px;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.1);
+        }
+
+        /* ADMIN VA HELPER UCHUN YONIB-OCHISH EFFEKTI */
+        @keyframes admin-blink { 0%, 100% { text-shadow: 0 0 20px var(--super); color: var(--super); opacity: 1; } 50% { opacity: 0.5; text-shadow: none; } }
+        @keyframes helper-blink { 0%, 100% { text-shadow: 0 0 20px var(--sub); color: var(--sub); opacity: 1; } 50% { opacity: 0.5; text-shadow: none; } }
+
+        .super-glow { animation: admin-blink 1s infinite; font-weight: bold; }
+        .sub-glow { animation: helper-blink 1.5s infinite; font-weight: bold; }
+
+        h2 { text-align: center; letter-spacing: 8px; text-shadow: 0 0 10px var(--neon); }
+        input, button { 
+            background: rgba(0, 0, 0, 0.7); border: 1px solid var(--neon); 
+            color: var(--neon); padding: 12px; margin: 8px 0; border-radius: 8px; outline: none;
+        }
+        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); font-weight: bold; }
+
+        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; scroll-behavior: smooth; }
+        .msg { margin: 12px 0; font-size: 0.9em; border-left: 1px solid rgba(0, 255, 65, 0.3); padding-left: 10px; }
+        
+        #admin-panel { 
+            display: none; position: absolute; top: 15%; left: 50%; transform: translateX(-50%);
+            background: rgba(5, 5, 5, 0.98); border: 1px solid var(--super);
+            padding: 20px; border-radius: 12px; z-index: 100; width: 280px; box-shadow: 0 0 30px var(--super);
+        }
+    </style>
+</head>
+<body>
+
+<div class="glass-panel">
+    <!-- LOGIN -->
+    <div id="login-scr" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+        <h2>[ WHOAMI SEC ]</h2>
+        <div style="display:flex; justify-content:center; gap:15px; font-size:2em; margin-bottom:15px;" id="av-box">
+            <span class="av-opt" style="cursor:pointer" onclick="setAv('👤', this)">👤</span>
+            <span class="av-opt" style="cursor:pointer" onclick="setAv('🤖', this)">🤖</span>
+            <span class="av-opt" style="cursor:pointer" onclick="setAv('🕶️', this)">🕶️</span>
+        </div>
+        <input type="text" id="nick-in" placeholder="Identifikator (Nik)..." oninput="checkHiddenAdmin(this.value)">
+        <div id="pass-box" style="display:none;">
+            <input type="password" id="pass-in" placeholder="Admin Parol..." style="width:100%; border-color:var(--super);">
+        </div>
+        <button onclick="launch()">TIZIMNI YUKLASH</button>
+    </div>
+
+    <!-- CHAT -->
+    <div id="chat-scr" style="display:none; flex-direction: column; height: 100%;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.7em;">
+            <span id="led">🟢 E2E_ENCRYPTION: ON</span>
+            <button id="adm-btn" style="display:none; padding:2px 8px; font-size:10px" onclick="toggleAdm()">CMD_PANEL</button>
+        </div>
+        <div id="chat-container"></div>
+        <div style="display:flex; gap:8px;">
+            <input type="text" id="msg-in" style="flex-grow:1" placeholder="Xabar yozing...">
+            <button onclick="pushMsg()" style="width:50px">></button>
+        </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin-panel">
+        <h4 class="super-glow" style="margin:0 0 15px 0; text-align:center">[ ROOT CONTROL ]</h4>
+        <button onclick="clearChat()" style="width:100%">Chatni Tozalash</button>
+        <div id="root-only">
+            <hr style="border:0.5px solid #333; margin:15px 0">
+            <input type="text" id="new-adm-nick" placeholder="Yordamchi Admin Niki" style="width:100%">
+            <input type="password" id="new-adm-pass" placeholder="Paroli" style="width:100%">
+            <button onclick="addHelper()" style="width:100%">Admin Qoshish</button>
+        </div>
+        <button onclick="toggleAdm()" style="width:100%; margin-top:10px; border-color:#555">Yopish</button>
+    </div>
+</div>
+
+<script>
+    let activeAv = "👤";
+    let myRole = "user"; 
+    let helpers = []; 
+    const secretKey = "XGAB_HIDDEN_NODE";
+
+    function setAv(av, el) {
+        activeAv = av;
+        document.querySelectorAll('.av-opt').forEach(a => a.style.textShadow = "none");
+        el.style.textShadow = "0 0 15px var(--neon)";
+    }
+
+    function checkHiddenAdmin(v) {
+        const passBox = document.getElementById('pass-box');
+        const isHelper = helpers.some(h => h.nick === v);
+        if(v === "x-gab" || isHelper) {
+            passBox.style.display = "block";
+        } else {
+            passBox.style.display = "none";
+        }
+    }
+
+    function launch() {
+        const n = document.getElementById('nick-in').value;
+        const p = document.getElementById('pass-in').value;
+        if(!n) return;
+
+        if(n === "x-gab" && p === "2011") {
+            myRole = "super";
+            activeAv = "👑"; // Sening stikering
+            document.getElementById('adm-btn').style.display = "block";
+        } else {
+            const helper = helpers.find(h => h.nick === n && h.pass === p);
+            if(helper) {
+                myRole = "sub";
+                activeAv = "💀"; // Helper stikeri
+                document.getElementById('adm-btn').style.display = "block";
+            } else if(p === "stop") {
+                document.body.innerHTML = "SYSTEM_STOPPED"; return;
+            }
+        }
+
+        document.getElementById('login-scr').style.display = "none";
+        document.getElementById('chat-scr').style.display = "flex";
+    }
+
+    function pushMsg() {
+        const i = document.getElementById('msg-in');
+        if(i.value.trim() !== "") {
+            printMsg(document.getElementById('nick-in').value, i.value);
+            i.value = "";
+        }
+    }
+
+    function printMsg(u, t) {
+        const c = document.getElementById('chat-container');
+        const d = document.createElement('div');
+        d.className = 'msg';
+        
+        let cls = "";
+        let roleName = u;
+        let finalAv = activeAv;
+
+        if(u === "x-gab") { 
+            cls = "super-glow"; 
+            roleName = "ADMIN x-gab"; 
+            finalAv = "👑";
+        } else if(helpers.some(h => h.nick === u)) { 
+            cls = "sub-glow"; 
+            roleName = "HELPER " + u; 
+            finalAv = "💀";
+        }
+
+        d.innerHTML = `<span>${finalAv}</span> <div><b class="${cls}">${roleName}:</b><br><span>${t}</span></div>`;
+        c.appendChild(d);
+        c.scrollTop = c.scrollHeight;
+    }
+
+    // ENTER TUGMASI
+    document.getElementById('msg-in').addEventListener('keypress', (e) => { 
+        if(e.key === 'Enter') pushMsg(); 
+    });
+
+    function toggleAdm() {
+        const p = document.getElementById('admin-panel');
+        p.style.display = (p.style.display === "block") ? "none" : "block";
+        if(myRole === "sub") document.getElementById('root-only').style.display = "none";
+    }
+
+    function clearChat() { document.getElementById('chat-container').innerHTML = ""; toggleAdm(); }
+
+    function addHelper() {
+        const n = document.getElementById('new-adm-nick').value;
+        const p = document.getElementById('new-adm-pass').value;
+        if(n && p) {
+            helpers.push({nick: n, pass: p});
+            alert("Helper qo'shildi: " + n);
+            document.getElementById('new-adm-nick').value = "";
+            document.getElementById('new-adm-pass').value = "";
+        }
+    }
+</script>
+</body>
+</html>
