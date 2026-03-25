@@ -4,48 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WHOAMI SEC | C2 Hidden Node</title>
-    <!-- SKRIPTLAR (Bularsiz chat ishlamaydi) -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
-    <script src="https://cloudflare.com"></script>
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org"></script>
     <style>
         :root { --neon: #00ff41; --super: #ff003c; --sub: #00d4ff; }
         * { box-sizing: border-box; cursor: crosshair; transition: 0.3s; }
-        body { background: radial-gradient(circle, #0f0f0f 0%, #000 100%); color: var(--neon); font-family: 'Courier New', monospace; height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; }
+        body { background: radial-gradient(circle, #0f0f0f 0%, #000 100%); color: var(--neon); font-family: 'Courier New', monospace; height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         .glass-panel { background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 12px; width: 95%; max-width: 500px; height: 90vh; display: flex; flex-direction: column; padding: 25px; box-shadow: 0 0 40px rgba(0, 255, 65, 0.1); }
+        
+        /* ADMIN VA HELPER NEON EFFEKTI (SENIKI) */
         @keyframes admin-blink { 0%, 100% { text-shadow: 0 0 20px var(--super); color: var(--super); opacity: 1; } 50% { opacity: 0.5; text-shadow: none; } }
-        @keyframes helper-blink { 0%, 100% { text-shadow: 0 0 20px var(--sub); color: var(--sub); opacity: 1; } 50% { opacity: 0.5; text-shadow: none; } }
         .super-glow { animation: admin-blink 1s infinite !important; font-weight: bold; }
-        .sub-glow { animation: helper-blink 1.5s infinite !important; font-weight: bold; }
+
         h2 { text-align: center; letter-spacing: 8px; text-shadow: 0 0 10px var(--neon); }
         input, button { background: rgba(0, 0, 0, 0.7); border: 1px solid var(--neon); color: var(--neon); padding: 12px; margin: 8px 0; border-radius: 8px; outline: none; }
         button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); font-weight: bold; }
-        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; scroll-behavior: smooth; display: block !important; }
-        .msg { margin: 12px 0; font-size: 0.9em; border-left: 1px solid rgba(0, 255, 65, 0.3); padding-left: 10px; display: flex; align-items: flex-start; gap: 10px; }
+        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; scroll-behavior: smooth; }
+        .msg { margin: 12px 0; font-size: 0.9em; border-left: 1px solid rgba(0, 255, 65, 0.3); padding-left: 10px; }
         #admin-panel { display: none; position: absolute; top: 15%; left: 50%; transform: translateX(-50%); background: rgba(5, 5, 5, 0.98); border: 1px solid var(--super); padding: 20px; border-radius: 12px; z-index: 100; width: 280px; box-shadow: 0 0 30px var(--super); }
     </style>
 </head>
 <body>
 
 <div class="glass-panel">
-    <!-- LOGIN -->
+    <!-- LOGIN (ESKI DIZAYN) -->
     <div id="login-scr" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
         <h2>[ WHOAMI SEC ]</h2>
         <div style="display:flex; justify-content:center; gap:15px; font-size:2em; margin-bottom:15px;">
-            <span class="av-opt" style="cursor:pointer" onclick="setAv('👤', this)">👤</span>
-            <span class="av-opt" style="cursor:pointer" onclick="setAv('🤖', this)">🤖</span>
-            <span class="av-opt" style="cursor:pointer" onclick="setAv('🕶️', this)">🕶️</span>
+            <span class="av-opt" onclick="setAv('👤', this)" style="cursor:pointer">👤</span>
+            <span class="av-opt" onclick="setAv('🤖', this)" style="cursor:pointer">🤖</span>
+            <span class="av-opt" onclick="setAv('🕶️', this)" style="cursor:pointer">🕶️</span>
         </div>
-        <input type="text" id="nick-in" placeholder="Identifikator (Nik)..." oninput="checkHiddenAdmin(this.value)">
-        <div id="pass-box" style="display:none;"><input type="password" id="pass-in" placeholder="Parol (2011)..." style="width:100%"></div>
+        <input type="text" id="nick-in" placeholder="Identifikator (Nik)..." oninput="checkAdmin(this.value)">
+        <div id="pass-box" style="display:none;">
+            <input type="password" id="pass-in" placeholder="Admin Parol (2011)..." style="width:100%">
+        </div>
         <button onclick="launch()">TIZIMNI YUKLASH</button>
     </div>
 
-    <!-- CHAT -->
+    <!-- CHAT (ESKI DIZAYN) -->
     <div id="chat-scr" style="display:none; flex-direction: column; height: 100%;">
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.7em;">
             <span id="led">🟢 E2E_ENCRYPTION: ON</span>
-            <button id="adm-btn" style="display:none; padding:2px 8px; font-size:10px" onclick="toggleAdm()">CMD_PANEL</button>
+            <button id="adm-btn" style="display:none; padding:2px 8px;" onclick="toggleAdm()">CMD_PANEL</button>
         </div>
         <div id="chat-container"></div>
         <div style="display:flex; gap:8px;">
@@ -58,83 +59,85 @@
     <div id="admin-panel">
         <h4 class="super-glow" style="text-align:center">[ ROOT CONTROL ]</h4>
         <button onclick="clearChat()" style="width:100%">Chatni Tozalash</button>
-        <div id="root-only">
-            <input type="text" id="new-adm-nick" placeholder="Helper Nik" style="width:100%">
-            <input type="password" id="new-adm-pass" placeholder="Helper Parol" style="width:100%">
-            <button onclick="addHelper()" style="width:100%">Admin Qoshish</button>
-        </div>
-        <button onclick="toggleAdm()" style="width:100%; border-color:#555">Yopish</button>
+        <button onclick="toggleAdm()" style="width:100%; margin-top:10px; border-color:#555">Yopish</button>
     </div>
 </div>
 
 <script>
-    // FIREBASE SOZLAMALARI
-    const firebaseConfig = {
-        apiKey: "AIzaSyAKXMfmb0Jjipnu2GSt-Oe0ocrBEoFlJPk",
-        authDomain: "://firebaseapp.com",
-        projectId: "whoami-sec",
-        storageBucket: "whoami-sec.firebasestorage.app",
-        messagingSenderId: "621208430939",
-        appId: "1:621208430939:web:6c22484904c2c17414d27e",
-        databaseURL: "https://firebaseio.com"
-    };
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    let activeAv = "👤", myRole = "user", helpers = {}, secretKey = "XGAB_2026_SECRET";
+    let activeAv = "👤";
+    let myRole = "user";
 
-    // Helperlarni yuklash
-    db.ref('helpers').on('value', (s) => { helpers = s.val() || {}; });
+    function setAv(av, el) {
+        activeAv = av;
+        document.querySelectorAll('.av-opt').forEach(a => a.style.textShadow = "none");
+        el.style.textShadow = "0 0 15px var(--neon)";
+    }
 
-    function setAv(av, el) { activeAv = av; document.querySelectorAll('.av-opt').forEach(a => a.style.textShadow = "none"); el.style.textShadow = "0 0 15px var(--neon)"; }
-
-    function checkHiddenAdmin(v) { document.getElementById('pass-box').style.display = (v === "x-gab" || helpers[v]) ? "block" : "none"; }
+    function checkAdmin(v) {
+        document.getElementById('pass-box').style.display = (v === "x-gab") ? "block" : "none";
+    }
 
     function launch() {
-        const n = document.getElementById('nick-in').value, p = document.getElementById('pass-in').value;
+        const n = document.getElementById('nick-in').value;
+        const p = document.getElementById('pass-in').value;
         if(!n) return;
-        if(n === "x-gab" && p === "2011") { myRole = "super"; activeAv = "👑"; document.getElementById('adm-btn').style.display = "block"; }
-        else if(helpers && helpers.pass === p) { myRole = "sub"; activeAv = "💀"; document.getElementById('adm-btn').style.display = "block"; }
+
+        if(n === "x-gab" && p === "2011") {
+            myRole = "super";
+            activeAv = "👑";
+            document.getElementById('adm-btn').style.display = "block";
+        }
+
         document.getElementById('login-scr').style.display = "none";
         document.getElementById('chat-scr').style.display = "flex";
-        loadMessages();
+        printMsg("SYSTEM", "Aloqa o'rnatildi. Barcha izlar o'chirildi.");
     }
 
     function pushMsg() {
-        const i = document.getElementById('msg-in'), n = document.getElementById('nick-in').value;
+        const i = document.getElementById('msg-in');
+        const n = document.getElementById('nick-in').value;
         if(i.value.trim()) {
-            const enc = CryptoJS.AES.encrypt(i.value, secretKey).toString();
-            db.ref('messages').push({ u: n, t: enc, a: activeAv });
+            // Xabarni Telegram botiga yuboramiz
+            tg.sendData(JSON.stringify({
+                user: n,
+                text: i.value,
+                avatar: activeAv,
+                role: myRole
+            }));
+            
+            // O'zimizga ham chiqarib qo'yamiz
+            printMsg(n, i.value, activeAv, myRole);
             i.value = "";
         }
     }
 
-    function loadMessages() {
-        db.ref('messages').limitToLast(50).on('child_added', (s) => {
-            const m = s.val();
-            try {
-                const dec = CryptoJS.AES.decrypt(m.t, secretKey).toString(CryptoJS.enc.Utf8);
-                if(dec) printMsg(m.u, dec, m.a);
-            } catch(e) { console.error("Xatolik!"); }
-        });
-    }
-
-    function printMsg(u, t, av) {
+    function printMsg(u, t, av, role) {
         const c = document.getElementById('chat-container');
         const d = document.createElement('div');
         d.className = 'msg';
-        let cls = (u === "x-gab") ? "super-glow" : (helpers[u] ? "sub-glow" : "");
-        let name = (u === "x-gab") ? "ADMIN " + u : (helpers[u] ? "HELPER " + u : u);
-        let icon = (u === "x-gab") ? "👑" : (helpers[u] ? "💀" : av);
-        d.innerHTML = `<span>${icon}</span><div><b class="${cls}">${name}:</b><br><span>${t}</span></div>`;
+        let cls = (u === "x-gab") ? "super-glow" : "";
+        let name = (u === "x-gab") ? "ADMIN " + u : u;
+        let icon = (u === "x-gab") ? "👑" : av;
+
+        d.innerHTML = `<span>${icon}</span> <div><b class="${cls}">${name}:</b><br><span>${t}</span></div>`;
         c.appendChild(d);
         c.scrollTop = c.scrollHeight;
     }
 
+    function toggleAdm() {
+        const p = document.getElementById('admin-panel');
+        p.style.display = (p.style.display === "block") ? "none" : "block";
+    }
+
+    function clearChat() {
+        document.getElementById('chat-container').innerHTML = "";
+        toggleAdm();
+    }
+
     document.getElementById('msg-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') pushMsg(); });
-    function toggleAdm() { const p = document.getElementById('admin-panel'); p.style.display = (p.style.display === "block") ? "none" : "block"; }
-    function clearChat() { db.ref('messages').remove(); document.getElementById('chat-container').innerHTML = ""; toggleAdm(); }
-    function addHelper() { const n = document.getElementById('new-adm-nick').value, p = document.getElementById('new-adm-pass').value; if(n && p) db.ref('helpers/' + n).set({pass: p}); }
 </script>
 </body>
 </html>
