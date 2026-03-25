@@ -13,13 +13,19 @@
             --bg: radial-gradient(circle, #0f0f0f 0%, #000 100%);
         }
         * { box-sizing: border-box; cursor: crosshair; transition: 0.3s; }
+        
         body { 
             background: var(--bg); color: var(--neon); 
             font-family: 'Courier New', monospace; height: 100vh; margin: 0; 
             display: flex; justify-content: center; align-items: center; overflow: hidden;
         }
-        /* Kiber-panjara effekti */
-        body::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0,255,65,0.03) 0px, rgba(0,255,65,0.03) 1px, transparent 1px, transparent 2px); pointer-events: none; z-index: 50; }
+
+        /* SCANLINE EFFEKTI */
+        body::after { 
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: repeating-linear-gradient(0deg, rgba(0,255,65,0.03) 0px, rgba(0,255,65,0.03) 1px, transparent 1px, transparent 2px); 
+            pointer-events: none; z-index: 50; 
+        }
         
         .glass-panel {
             background: rgba(15, 15, 15, 0.9); backdrop-filter: blur(20px);
@@ -27,21 +33,36 @@
             width: 95%; max-width: 500px; height: 90vh; display: flex; flex-direction: column; padding: 25px;
             box-shadow: 0 0 40px rgba(0, 255, 65, 0.1); position: relative; z-index: 100;
         }
+
+        /* ADMIN NEON EFFEKTI */
         @keyframes admin-blink { 0%, 100% { text-shadow: 0 0 20px var(--super); color: var(--super); } 50% { opacity: 0.4; } }
         .super-glow { animation: admin-blink 1s infinite !important; font-weight: bold; }
 
         h2 { text-align: center; letter-spacing: 8px; text-shadow: 0 0 10px var(--neon); margin: 0 0 15px 0; }
-        input, button { background: rgba(0, 0, 0, 0.7); border: 1px solid var(--neon); color: var(--neon); padding: 12px; margin: 8px 0; border-radius: 8px; outline: none; width: 100%; }
-        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); cursor: pointer; }
         
-        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; scroll-behavior: smooth; }
-        .msg { margin: 12px 0; font-size: 0.85em; border-left: 1px solid var(--neon); padding-left: 10px; animation: slideIn 0.3s; }
+        input, button { 
+            background: rgba(0, 0, 0, 0.7); border: 1px solid var(--neon); 
+            color: var(--neon); padding: 12px; margin: 8px 0; border-radius: 8px; outline: none; width: 100%;
+        }
+        button { cursor: pointer; font-weight: bold; }
+        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
+
+        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; scroll-behavior: smooth; padding-right: 5px; }
+        .msg { margin: 12px 0; font-size: 0.85em; border-left: 1px solid var(--neon); padding-left: 10px; animation: slideIn 0.3s forwards; }
         @keyframes slideIn { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        #admin-panel { display: none; position: absolute; top: 15%; left: 50%; transform: translateX(-50%); background: #050505; border: 1px solid var(--super); padding: 20px; z-index: 200; width: 280px; box-shadow: 0 0 30px var(--super); border-radius: 12px; }
+        /* ADMIN PANEL */
+        #admin-panel { 
+            display: none; position: absolute; top: 15%; left: 50%; transform: translateX(-50%); 
+            background: #050505; border: 1px solid var(--super); padding: 20px; 
+            z-index: 200; width: 280px; box-shadow: 0 0 30px var(--super); border-radius: 12px; 
+        }
+
         .av-box { display: flex; justify-content: center; gap: 15px; font-size: 2em; margin-bottom: 15px; }
         .av-opt { cursor: pointer; opacity: 0.4; transition: 0.3s; }
         .av-opt.active { opacity: 1; transform: scale(1.3); text-shadow: 0 0 15px var(--neon); }
+
+        .status-bar { display: flex; justify-content: space-between; font-size: 0.65em; border-bottom: 1px solid #222; padding-bottom: 5px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -56,66 +77,67 @@
             <span class="av-opt" onclick="setAv('🕶️', this)">🕶️</span>
         </div>
         <input type="text" id="nick-in" placeholder="IDENTIFIKATOR (NIK)..." oninput="checkAdm(this.value)">
-        <div id="pass-box" style="display:none;"><input type="password" id="pass-in" placeholder="KALIT..."></div>
+        <div id="pass-box" style="display:none;"><input type="password" id="pass-in" placeholder="MAXFIY KALIT (2011)..." style="border-color: var(--super);"></div>
         <button onclick="launch()">TIZIMNI YUKLASH</button>
     </div>
 
     <!-- CHAT SCREEN -->
     <div id="chat-scr" style="display:none; flex-direction: column; height: 100%;">
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.7em; border-bottom: 1px solid #222; padding-bottom: 5px;">
-            <span>🟢 ONLINE: <b id="online-count">0</b></span>
-            <button id="adm-btn" style="display:none; width:auto; padding:2px 10px; border-color: var(--super); color: var(--super);" onclick="toggleAdm()">[CMD]</button>
+        <div class="status-bar">
+            <span>🟢 ONLAYN: <b id="online-count">0</b></span>
+            <span>SHIFRLASH: AES-256</span>
+            <button id="adm-btn" style="display:none; width:auto; padding:2px 8px; border-color: var(--super); color: var(--super);" onclick="toggleAdm()">[CMD]</button>
         </div>
         <div id="chat-container"></div>
         <div style="display:flex; gap:8px;">
-            <input type="text" id="msg-in" style="flex-grow:1" placeholder="Xabar...">
-            <button onclick="send()">></button>
+            <input type="text" id="msg-in" style="flex-grow:1" placeholder="Maxfiy xabar...">
+            <button onclick="send()" style="width:50px">></button>
         </div>
     </div>
 
     <!-- ADMIN PANEL -->
     <div id="admin-panel">
         <h4 class="super-glow" style="text-align:center; margin-top:0;">ROOT_CONTROL</h4>
-        <button onclick="clearChat()" style="border-color: var(--super)">CHATNI TOZALASH</button>
+        <button onclick="clearChat()" style="border-color: var(--super)">LOGLARNI TOZALASH</button>
         <p style="font-size: 0.7em; margin: 15px 0 5px;">FONNI O'ZGARTIRISH:</p>
         <div style="display:flex; gap:5px;">
             <button onclick="changeBg('#000')" style="font-size: 8px;">QORA</button>
             <button onclick="changeBg('radial-gradient(circle, #200000 0%, #000 100%)')" style="font-size: 8px;">QIZIL</button>
             <button onclick="changeBg('radial-gradient(circle, #001a20 0%, #000 100%)')" style="font-size: 8px;">KO'K</button>
         </div>
-        <button onclick="toggleAdm()" style="margin-top:10px; border-color:#555">YOPISH</button>
+        <button onclick="toggleAdm()" style="margin-top:10px; border-color:#555">BACK</button>
     </div>
 </div>
 
 <script>
     // --- SUPABASE KONFIGURATSIYASI ---
-    const SB_URL = 'https://xeoanmfwbpbojnxlhpvt.supabase.co '; 
+    const SB_URL = 'https://xeoanmfwbpbojnxlhpvt.supabase.co'; 
     const SB_KEY = 'sb_publishable_ueDPj-bU63g5gKLQ-beUpg_AFyDZyYg'; 
     const sb = supabase.createClient(SB_URL, SB_KEY);
 
-    let activeAv = "👤", myRole = "user", mKey = "WHOAMI_XGAB_2026_E2EE";
+    let activeAv = "👤", myRole = "user", mKey = "WHOAMI_XGAB_2026_SECURE_NODE";
 
     function setAv(av, el) { activeAv = av; document.querySelectorAll('.av-opt').forEach(x => x.classList.remove('active')); el.classList.add('active'); }
-    function checkAdm(v) { document.getElementById('pass-box').style.display = (v === "x-gab") ? "block" : "none"; }
+    function checkAdm(v) { document.getElementById('pass-box').style.display = (v.toLowerCase() === "x-gab") ? "block" : "none"; }
 
     async function launch() {
         const n = document.getElementById('nick-in').value, p = document.getElementById('pass-in').value;
         if(!n) return;
-        if(n === "x-gab" && p === "2011") { myRole = "super"; activeAv = "👑"; document.getElementById('adm-btn').style.display = "block"; }
+        if(n.toLowerCase() === "x-gab" && p === "2011") { myRole = "super"; activeAv = "👑"; document.getElementById('adm-btn').style.display = "block"; }
         
         document.getElementById('login-scr').style.display = "none";
         document.getElementById('chat-scr').style.display = "flex";
         
-        // Jonli xabarlarni eshitish
+        // REALTIME XABARLARNI ESHITISH
         sb.channel('public:messages').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
             const m = p.new;
             try {
                 const dec = CryptoJS.AES.decrypt(m.content, mKey).toString(CryptoJS.enc.Utf8);
                 if(dec) printMsg(m.sender, dec, m.avatar);
-            } catch(e) {}
+            } catch(e) { console.log("E2EE xatosi"); }
         }).subscribe();
 
-        // Online odamlarni sanash
+        // ONLINE SANASH (PRESENCE)
         const room = sb.channel('online_nodes');
         room.on('presence', { event: 'sync' }, () => {
             document.getElementById('online-count').innerText = Object.keys(room.presenceState()).length;
@@ -123,8 +145,8 @@
             if (status === 'SUBSCRIBED') await room.track({ u: n });
         });
         
-        // Oxirgi xabarlarni yuklash
-        const { data } = await sb.from('messages').select('*').order('id', { ascending: false }).limit(20);
+        // ESKI XABARLARNI YUKLASH
+        const { data } = await sb.from('messages').select('*').order('id', { ascending: false }).limit(30);
         if(data) data.reverse().forEach(m => {
             try {
                 const dec = CryptoJS.AES.decrypt(m.content, mKey).toString(CryptoJS.enc.Utf8);
@@ -146,8 +168,8 @@
         const c = document.getElementById('chat-container');
         const d = document.createElement('div');
         d.className = 'msg';
-        let cls = (u === 'x-gab') ? "super-glow" : "";
-        d.innerHTML = `<span>${av}</span> <div><b class="${cls}">${u === 'x-gab' ? 'ADMIN ' + u : u}:</b><br><span>${t}</span></div>`;
+        let cls = (u.toLowerCase() === 'x-gab') ? "super-glow" : "";
+        d.innerHTML = `<span>${av}</span> <div><b class="${cls}">${u.toLowerCase() === 'x-gab' ? 'ADMIN ' + u : u}:</b><br><span>${t}</span></div>`;
         c.appendChild(d);
         c.scrollTop = c.scrollHeight;
     }
