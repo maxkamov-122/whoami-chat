@@ -3,137 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WHOAMI SEC | C2 Ultimate Node</title>
+    <title>WHOAMI SEC | C2 Node V14</title>
     <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <style>
         :root { 
-            --neon: #00ff41; --super: #ff003c; --sub: #00d4ff; --admin-gold: #ffea00;
-            --bg-main: #000;
+            --neon: #00ff41; --super: #ff003c; --sub: #00d4ff; 
+            --bg-main: radial-gradient(circle, #0a0a0a 0%, #000 100%);
         }
-        * { box-sizing: border-box; cursor: crosshair; transition: 0.5s; font-family: 'Courier New', monospace; }
+        * { box-sizing: border-box; cursor: crosshair; transition: 0.3s; font-family: 'Courier New', monospace; }
         
-        body { background: var(--bg-main); color: var(--neon); height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        body { 
+            background: var(--bg-main); color: var(--neon); 
+            height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; overflow: hidden;
+        }
 
-        /* NEON FON ANIMATSIYALARI */
-        .bg-pulse-red { animation: pulseRed 2s infinite; }
-        .bg-pulse-blue { animation: pulseBlue 2s infinite; }
-        .bg-pulse-green { animation: pulseGreen 2s infinite; }
-
-        @keyframes pulseRed { 0%, 100% { background: #000; } 50% { background: #300; box-shadow: inset 0 0 100px #f00; } }
-        @keyframes pulseBlue { 0%, 100% { background: #000; } 50% { background: #003; box-shadow: inset 0 0 100px #00f; } }
-        @keyframes pulseGreen { 0%, 100% { background: #000; } 50% { background: #010; box-shadow: inset 0 0 100px #0f0; } }
+        /* FON EFFEKTLARI */
+        .neon-bg-red { background: radial-gradient(circle, #2a0000 0%, #000 100%) !important; animation: pulse 1s infinite; }
+        .neon-bg-blue { background: radial-gradient(circle, #000a2a 0%, #000 100%) !important; animation: pulse 1s infinite; }
+        .neon-bg-green { background: radial-gradient(circle, #001a00 0%, #000 100%) !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
 
         .glass-panel {
-            background: rgba(5, 5, 5, 0.9); backdrop-filter: blur(15px);
-            border: 1px solid var(--neon); border-radius: 10px;
-            width: 98%; max-width: 700px; height: 95vh; display: flex; flex-direction: column; padding: 20px;
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2); position: relative; z-index: 100;
+            background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 10px;
+            width: 95%; max-width: 600px; height: 90vh; display: flex; flex-direction: column; padding: 20px;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.1); position: relative; z-index: 100;
         }
 
-        /* XABAR ANIMATSIYALARI */
-        @keyframes admin-entry { from { transform: scale(0.5) rotateX(90deg); opacity: 0; } to { transform: scale(1) rotateX(0); opacity: 1; } }
-        @keyframes user-entry { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes gold-glow { 0%, 100% { text-shadow: 0 0 15px var(--admin-gold), 0 0 30px var(--admin-gold); color: var(--admin-gold); } 50% { opacity: 0.8; } }
+        /* ADMIN & HELPER ANIMATSIYALARI */
+        @keyframes admin-blink { 0%, 100% { text-shadow: 0 0 15px var(--super); color: var(--super); } 50% { opacity: 0.5; } }
+        @keyframes helper-blink { 0%, 100% { text-shadow: 0 0 15px var(--sub); color: var(--sub); } 50% { opacity: 0.5; } }
+        
+        .admin-txt { animation: admin-blink 1.2s infinite; font-weight: bold; }
+        .helper-txt { animation: helper-blink 1.2s infinite; font-weight: bold; }
 
-        .msg-admin-special { animation: admin-entry 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid var(--admin-gold) !important; padding: 10px; background: rgba(255, 234, 0, 0.05); }
-        .admin-gold-txt { animation: gold-glow 1s infinite; font-weight: bold; font-size: 1.1em; }
-        .msg-user { animation: user-entry 0.4s ease-out; }
+        input, button { 
+            background: rgba(0, 0, 0, 0.8); border: 1px solid var(--neon); 
+            color: var(--neon); padding: 12px; margin: 5px 0; border-radius: 5px; outline: none; width: 100%;
+        }
+        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
 
-        input, button { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 12px; margin: 5px 0; border-radius: 5px; outline: none; }
-        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
+        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px; }
+        .msg { margin: 10px 0; font-size: 0.9em; border-left: 2px solid var(--neon); padding-left: 10px; animation: slideIn 0.3s; }
+        .sys-msg { font-size: 0.7em; color: #555; text-align: center; margin: 8px 0; border-bottom: 1px solid #222; }
+        
+        @keyframes slideIn { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        #chat-container { flex-grow: 1; overflow-y: auto; padding: 10px; border: 1px solid #111; margin-bottom: 10px; }
-        .msg { margin: 15px 0; border-left: 2px solid var(--neon); padding-left: 10px; }
-        .sys-info { font-size: 0.7em; color: #666; text-align: center; margin: 5px 0; text-transform: uppercase; letter-spacing: 2px; }
+        .modal { 
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: #000; border: 2px solid var(--neon); padding: 20px; 
+            z-index: 500; width: 300px; box-shadow: 0 0 30px #000; text-align: center;
+        }
 
-        .modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #000; border: 2px solid var(--super); padding: 25px; z-index: 1000; width: 350px; text-align: center; }
+        #warn-screen { 
+            display: flex; position: fixed; top:0; left:0; width:100%; height:100%; 
+            background: #000; color: var(--super); z-index: 2000; 
+            flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;
+        }
     </style>
 </head>
 <body id="main-body">
 
-<div class="glass-panel">
-    <!-- LOGIN -->
-    <div id="login-scr">
-        <h2 style="text-align:center; color: var(--super); letter-spacing: 5px;">[ WHOAMI ENCRYPTED ]</h2>
-        <p class="sys-info" style="color:var(--super)">TIZIM FAQAT MUTAXASISLAR UCHUN! ODDY FOYDALANUVCHILAR TAQIQLANGAN!</p>
-        <input type="text" id="nick-in" placeholder="NIK..." oninput="checkRole(this.value)" style="width:100%">
-        <div id="pass-box" style="display:none;"><input type="password" id="pass-in" placeholder="KALIT..." style="width:100%"></div>
-        <button onclick="launch()" style="width:100%">TERMINALGA KIRISH</button>
+<!-- KIRISH OGOHLANTIRISHI -->
+<div id="warn-screen">
+    <h1 style="font-size: 2em; text-shadow: 0 0 10px var(--super);">⚠️ DIQQAT ⚠️</h1>
+    <p style="border: 1px solid var(--super); padding: 15px; max-width: 400px;">
+        BU CHAT SHIFRLANGAN VA MAXFIY! ODDY ODAMLAR KIRISHI QAT'IYAN TAQIQLANADI. 
+        DAVOM ETISH BILAN BARCHA MAS'ULIYATNI O'Z BO'YNINGIZGA OLASIZ.
+    </p>
+    <button onclick="confirmWarn()" style="width: 200px; border-color: var(--super); color: var(--super);">TASDIQLAYMAN</button>
+</div>
+
+<div class="glass-panel" id="main-panel">
+    <!-- LOGIN SCREEN -->
+    <div id="login-scr" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
+        <h2 style="text-align:center;">[ WHOAMI SEC ]</h2>
+        <input type="text" id="nick-in" placeholder="IDENTIFIKATOR (NIK)..." oninput="checkRole(this.value)">
+        <div id="pass-box" style="display:none;"><input type="password" id="pass-in" placeholder="MAXFIY KALIT..."></div>
+        <button onclick="launch()">TIZIMNI YUKLASH</button>
     </div>
 
-    <!-- CHAT TERMINAL -->
+    <!-- CHAT SCREEN -->
     <div id="chat-scr" style="display:none; flex-direction: column; height: 100%;">
-        <div style="display:flex; justify-content:space-between; font-size:0.7em; border-bottom: 1px solid #222; padding-bottom: 5px;">
-            <span>STATUS: <b id="online-count">1</b> ONLINE</span>
-            <button id="adm-btn" style="display:none; padding:2px 10px; font-size:9px; border-color:var(--super)" onclick="togglePanel('admin-panel')">ADMIN PANEL</button>
-            <button id="hlp-btn" style="display:none; padding:2px 10px; font-size:9px; border-color:var(--sub)" onclick="togglePanel('helper-panel')">HELPER PANEL</button>
+        <div style="display:flex; justify-content:space-between; font-size:0.7em; margin-bottom: 5px;">
+            <span>STATUS: <b id="online-count">0</b> ONLINE</span>
+            <button id="adm-btn" style="display:none; width:auto; padding:2px 8px; font-size:9px;" onclick="togglePanel('admin-panel')">CMD</button>
+            <button id="hlp-btn" style="display:none; width:auto; padding:2px 8px; font-size:9px;" onclick="togglePanel('helper-panel')">TOOLS</button>
         </div>
-        
         <div id="chat-container"></div>
-        
-        <div style="display:flex; gap:10px;">
-            <input type="text" id="msg-in" placeholder="Xabarni yozing (Enter - yuborish)..." style="flex-grow:1">
-            <button onclick="send()" style="width:80px">SEND</button>
-        </div>
-    </div>
-
-    <!-- ADMIN MODAL -->
-    <div id="admin-panel" class="modal">
-        <h3 class="admin-gold-txt">ADMIN COMMANDS</h3>
-        <button onclick="sendAction('clear')" style="width:100%">LOGLARNI TOZALASH</button>
-        <button onclick="toggleStealth()" style="width:100%">NIQOBLANISH (USER69)</button>
-        <button onclick="sendAction('havf')" style="width:100%; background: var(--super); color:white;">🚨 HAVF (SHIFRLASH)</button>
-        <p style="font-size:0.6em; margin:10px 0;">NEON FONLAR:</p>
         <div style="display:flex; gap:5px;">
-            <button onclick="changeTheme('red')" style="flex:1; font-size:8px;">QIZIL</button>
-            <button onclick="changeTheme('blue')" style="flex:1; font-size:8px;">KO'K</button>
-            <button onclick="changeTheme('green')" style="flex:1; font-size:8px;">YASHIL</button>
+            <input type="text" id="msg-in" placeholder="Xabar yozing (Enter)..." style="flex-grow:1">
+            <button onclick="send()" style="width:50px">></button>
         </div>
-        <button onclick="togglePanel('admin-panel')" style="margin-top:15px; border-color:#444">YOPISH</button>
     </div>
 
-    <!-- HELPER MODAL -->
+    <!-- ADMIN PANEL -->
+    <div id="admin-panel" class="modal" style="border-color: var(--super);">
+        <h3 class="admin-txt">ROOT_ACCESS</h3>
+        <button onclick="sendAction('clear')">CHATNI TOZALASH</button>
+        <button onclick="sendAction('havf')" style="background:var(--super); color:white;">🚨 HAVF REJIMI</button>
+        <button onclick="toggleStealth()">NIQOBLANISH (USER69)</button>
+        <div style="display:flex; gap:5px;">
+            <button onclick="changeTheme('red')" style="font-size:8px;">QIZIL</button>
+            <button onclick="changeTheme('blue')" style="font-size:8px;">KO'K</button>
+            <button onclick="changeTheme('green')" style="font-size:8px;">YASHIL</button>
+        </div>
+        <button onclick="togglePanel('admin-panel')" style="margin-top:10px; border-color:#444">YOPISH</button>
+    </div>
+
+    <!-- HELPER PANEL -->
     <div id="helper-panel" class="modal" style="border-color: var(--sub);">
-        <h3 style="color:var(--sub)">HELPER TOOLS</h3>
-        <button onclick="sendAction('clear')" style="width:100%">CHATNI TOZALASH</button>
+        <h3 class="helper-txt">HELPER_MODE</h3>
+        <button onclick="sendAction('clear')">CHATNI TOZALASH</button>
         <div style="display:flex; gap:5px;">
-            <button onclick="changeTheme('red')" style="flex:1; font-size:8px;">QIZIL</button>
-            <button onclick="changeTheme('blue')" style="flex:1; font-size:8px;">KO'K</button>
-            <button onclick="changeTheme('green')" style="flex:1; font-size:8px;">YASHIL</button>
+            <button onclick="changeTheme('red')" style="font-size:8px;">QIZIL</button>
+            <button onclick="changeTheme('blue')" style="font-size:8px;">KO'K</button>
+            <button onclick="changeTheme('green')" style="font-size:8px;">YASHIL</button>
         </div>
-        <button onclick="togglePanel('helper-panel')" style="margin-top:15px; border-color:#444">YOPISH</button>
+        <button onclick="togglePanel('helper-panel')" style="margin-top:10px; border-color:#444">YOPISH</button>
     </div>
 </div>
 
 <script>
     const ABLY_KEY = '7k7eJQ.wlzQCA:mT1OA_HGf29bZrs8s_kMJ2K39lR6UgNr1aOGks7ttds';
     const ably = new Ably.Realtime(ABLY_KEY);
-    const channel = ably.channels.get('whoami-v13-ultimate');
+    const channel = ably.channels.get('whoami-v14-final');
 
-    let myNick = "", myRole = "user", isStealth = false, havfMode = false;
-    const cKey = "AES_KEY_3301";
+    let myNick = "", myRole = "user", isStealth = false;
+    let havfActive = false;
+    const cryptKey = "WHOAMI_SECRET_NODE";
 
-    function checkRole(v) { document.getElementById('pass-box').style.display = (v.toLowerCase()==="x-gab" || v.toLowerCase()==="helper") ? "block" : "none"; }
+    function confirmWarn() {
+        document.getElementById('warn-screen').style.display = 'none';
+        document.getElementById('login-scr').style.display = 'flex';
+    }
+
+    function checkRole(v) {
+        const l = v.toLowerCase();
+        document.getElementById('pass-box').style.display = (l === "x-gab" || l === "helper") ? "block" : "none";
+    }
 
     function launch() {
         myNick = document.getElementById('nick-in').value.trim();
         const p = document.getElementById('pass-in').value;
         if(!myNick) return;
 
-        if(myNick.toLowerCase()==="x-gab" && p==="6969") { myRole="admin"; document.getElementById('adm-btn').style.display='block'; }
-        else if(myNick.toLowerCase()==="helper" && p==="6996") { myRole="helper"; document.getElementById('hlp-btn').style.display='block'; }
+        if(myNick.toLowerCase() === "x-gab" && p === "6969") { 
+            myRole = "admin"; document.getElementById('adm-btn').style.display = 'block'; 
+        } else if(myNick.toLowerCase() === "helper" && p === "6996") { 
+            myRole = "helper"; document.getElementById('hlp-btn').style.display = 'block'; 
+        }
 
         document.getElementById('login-scr').style.display = 'none';
         document.getElementById('chat-scr').style.display = 'flex';
 
-        // Faqat admin bo'lmasa kirish xabari
-        if(myRole !== 'admin') {
-            channel.publish('sys', { type: 'join', user: myNick });
-        }
+        if(myRole !== "admin") channel.publish('sys', { type: 'join', user: myNick });
 
         channel.subscribe('msg', (m) => renderMsg(m.data));
         channel.subscribe('sys', (m) => handleSys(m.data));
+        
+        setInterval(updateOnline, 5000);
     }
 
     function send() {
@@ -142,26 +172,32 @@
 
         let dNick = isStealth ? "user69" : myNick;
         let dRole = isStealth ? "user" : myRole;
-        let dAv = (dRole==="admin") ? "👑" : (dRole==="helper" ? "🛡️" : "👤");
+        let dAv = (dRole === "admin") ? "👑" : (dRole === "helper" ? "🛡️" : "👤");
 
-        const enc = CryptoJS.AES.encrypt(inp.value, cKey).toString();
-        channel.publish('msg', { nick: dNick, text: enc, av: dAv, role: dRole, raw: inp.value });
+        // Yangi xabarlar shifrlanmasligi uchun shunchaki matn yuboramiz
+        channel.publish('msg', { 
+            nick: dNick, 
+            text: inp.value, 
+            av: dAv, 
+            role: dRole 
+        });
         inp.value = '';
     }
 
-    // ENTER TUGMASI
     document.getElementById('msg-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
 
     function renderMsg(data) {
         const box = document.getElementById('chat-container');
         const div = document.createElement('div');
-        div.className = (data.role === 'admin') ? 'msg msg-admin-special' : 'msg msg-user';
+        div.className = 'msg';
         
-        let content = havfMode ? data.text : CryptoJS.AES.decrypt(data.text, cKey).toString(CryptoJS.enc.Utf8);
-        let nStyle = (data.role === 'admin') ? 'admin-gold-txt' : (data.role === 'helper' ? 'helper-txt' : '');
+        let nStyle = (data.role === 'admin') ? 'admin-txt' : (data.role === 'helper' ? 'helper-txt' : '');
         let rTag = (data.role === 'admin') ? ' [ADMIN]' : (data.role === 'helper' ? ' [HELPER]' : '');
+        
+        // Agar havf rejimi yoqilsa, xabar shifrga aylanadi
+        let displayText = havfActive ? CryptoJS.AES.encrypt(data.text, cryptKey).toString().substring(0, 25) + "..." : data.text;
 
-        div.innerHTML = `<span class="${nStyle}">${data.av}${rTag} ${data.nick}:</span> <span style="color:${data.role==='admin'?'var(--admin-gold)':'#fff'}">${content}</span>`;
+        div.innerHTML = `<span class="${nStyle}">${data.av}${rTag} ${data.nick}:</span> <span>${displayText}</span>`;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
     }
@@ -169,15 +205,21 @@
     function handleSys(data) {
         const box = document.getElementById('chat-container');
         if(data.type === 'join') {
-            box.innerHTML += `<div class="sys-info">>> ${data.user} TARMOQQA ULANDI</div>`;
+            box.innerHTML += `<div class="sys-msg">>> ${data.user} TARMOQQA ULANDI</div>`;
         } else if(data.type === 'clear') {
-            box.innerHTML = '<div class="sys-info" style="color:var(--neon)">CHAT TOZALANDI</div>';
+            box.innerHTML = '<div class="sys-msg" style="color:var(--neon)">CHAT TOZALANDI</div>';
         } else if(data.type === 'theme') {
-            document.getElementById('main-body').className = 'bg-pulse-' + data.color;
-            box.innerHTML += `<div class="sys-info" style="color:#fff; border:1px solid #fff; padding:5px;">FON ${data.color.toUpperCase()} RANGA O'ZGARTIRILDI</div>`;
+            document.getElementById('main-body').className = 'neon-bg-' + data.color;
         } else if(data.type === 'havf') {
-            havfMode = true;
-            box.innerHTML += `<div class="sys-info" style="color:var(--super); border:2px solid var(--super); padding:10px;">🚨 CHAT HAVF OSTIDA! HAMMA YOZISHMALAR SHIFRLANDI!</div>`;
+            havfActive = true;
+            // Hammaning xabarlarini shifrlab ko'rsatish (qayta yuklash kabi effekt)
+            const msgs = document.querySelectorAll('.msg span:last-child');
+            msgs.forEach(m => m.innerText = "ENC_" + Math.random().toString(36).substring(7));
+            
+            if(myRole !== 'admin') {
+                alert("CHAT HAVF OSTIDA! CHATDAN CHIQING!");
+                box.innerHTML += `<div style="color:var(--super); text-align:center; font-weight:bold; border:1px solid var(--super); margin:10px 0;">🚨 CHAT HAVF OSTIDA CHATDAN CHIQING!</div>`;
+            }
         }
         box.scrollTop = box.scrollHeight;
     }
@@ -189,11 +231,12 @@
 
     function toggleStealth() {
         isStealth = !isStealth;
-        alert(isStealth ? "Niqoblanish faol: user69" : "Niqoblanish o'chirildi");
+        alert(isStealth ? "Niqoblanish: user69 faol" : "Niqoblanish o'chirildi");
     }
 
     function sendAction(t) { channel.publish('sys', { type: t }); }
     function changeTheme(c) { channel.publish('sys', { type: 'theme', color: c }); }
+    function updateOnline() { ably.presence.get((err, m) => { if(!err) document.getElementById('online-count').innerText = m.length; }); }
 </script>
 </body>
 </html>
