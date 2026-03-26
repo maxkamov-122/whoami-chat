@@ -3,63 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WHOAMI SEC | C2 Node V14</title>
+    <title>WHOAMI SEC | C2 Hidden Node V16</title>
     <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <style>
         :root { 
             --neon: #00ff41; --super: #ff003c; --sub: #00d4ff; 
-            --bg-main: radial-gradient(circle, #0a0a0a 0%, #000 100%);
+            --bg: radial-gradient(circle, #0f0f0f 0%, #000 100%);
         }
         * { box-sizing: border-box; cursor: crosshair; transition: 0.3s; font-family: 'Courier New', monospace; }
         
         body { 
-            background: var(--bg-main); color: var(--neon); 
+            background: var(--bg); color: var(--neon); 
             height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; overflow: hidden;
         }
 
-        /* FON EFFEKTLARI */
-        .neon-bg-red { background: radial-gradient(circle, #2a0000 0%, #000 100%) !important; animation: pulse 1s infinite; }
-        .neon-bg-blue { background: radial-gradient(circle, #000a2a 0%, #000 100%) !important; animation: pulse 1s infinite; }
-        .neon-bg-green { background: radial-gradient(circle, #001a00 0%, #000 100%) !important; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
+        /* NEON FONLAR */
+        .neon-bg-red { background: radial-gradient(circle, #2a0000 0%, #000 100%) !important; animation: pulse 1.5s infinite; }
+        .neon-bg-blue { background: radial-gradient(circle, #000a2a 0%, #000 100%) !important; animation: pulse 1.5s infinite; }
+        .neon-bg-green { background: radial-gradient(circle, #001a00 0%, #000 100%) !important; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.9; } 50% { opacity: 1; } }
+
+        body::after { 
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: repeating-linear-gradient(0deg, rgba(0,255,65,0.02) 0px, rgba(0,255,65,0.02) 1px, transparent 1px, transparent 2px); 
+            pointer-events: none; z-index: 50; 
+        }
 
         .glass-panel {
-            background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 10px;
-            width: 95%; max-width: 600px; height: 90vh; display: flex; flex-direction: column; padding: 20px;
+            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 12px;
+            width: 95%; max-width: 600px; height: 92vh; display: flex; flex-direction: column; padding: 25px;
             box-shadow: 0 0 40px rgba(0, 255, 65, 0.1); position: relative; z-index: 100;
         }
 
-        /* ADMIN & HELPER ANIMATSIYALARI */
-        @keyframes admin-blink { 0%, 100% { text-shadow: 0 0 15px var(--super); color: var(--super); } 50% { opacity: 0.5; } }
-        @keyframes helper-blink { 0%, 100% { text-shadow: 0 0 15px var(--sub); color: var(--sub); } 50% { opacity: 0.5; } }
+        /* ANIMATSIYALAR */
+        @keyframes admin-blink { 0%, 100% { text-shadow: 0 0 20px var(--super); color: var(--super); } 50% { opacity: 0.5; } }
+        @keyframes helper-blink { 0%, 100% { text-shadow: 0 0 20px var(--sub); color: var(--sub); } 50% { opacity: 0.5; } }
         
-        .admin-txt { animation: admin-blink 1.2s infinite; font-weight: bold; }
+        .admin-txt { animation: admin-blink 1.2s infinite; font-weight: bold; font-size: 1.1em; }
         .helper-txt { animation: helper-blink 1.2s infinite; font-weight: bold; }
 
         input, button { 
             background: rgba(0, 0, 0, 0.8); border: 1px solid var(--neon); 
-            color: var(--neon); padding: 12px; margin: 5px 0; border-radius: 5px; outline: none; width: 100%;
+            color: var(--neon); padding: 14px; margin: 8px 0; border-radius: 8px; outline: none; width: 100%;
         }
-        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
+        button { cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
+        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 25px var(--neon); }
 
-        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px; }
-        .msg { margin: 10px 0; font-size: 0.9em; border-left: 2px solid var(--neon); padding-left: 10px; animation: slideIn 0.3s; }
-        .sys-msg { font-size: 0.7em; color: #555; text-align: center; margin: 8px 0; border-bottom: 1px solid #222; }
+        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; scroll-behavior: smooth; border-bottom: 1px solid #111; }
+        .msg { margin: 12px 0; font-size: 0.9em; border-left: 2px solid var(--neon); padding-left: 12px; animation: slideIn 0.3s; line-height: 1.4; }
+        .sys-msg { font-size: 0.75em; color: #666; text-align: center; margin: 10px 0; border-top: 1px solid #222; padding-top: 5px; }
         
-        @keyframes slideIn { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideIn { from { transform: translateX(-15px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        .modal { 
+        .modal-panel { 
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: #000; border: 2px solid var(--neon); padding: 20px; 
-            z-index: 500; width: 300px; box-shadow: 0 0 30px #000; text-align: center;
+            background: #050505; border: 2px solid var(--super); padding: 25px; 
+            z-index: 500; width: 340px; box-shadow: 0 0 50px #000; border-radius: 15px; text-align: center;
         }
 
         #warn-screen { 
             display: flex; position: fixed; top:0; left:0; width:100%; height:100%; 
             background: #000; color: var(--super); z-index: 2000; 
-            flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;
+            flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px;
         }
     </style>
 </head>
@@ -67,18 +74,19 @@
 
 <!-- KIRISH OGOHLANTIRISHI -->
 <div id="warn-screen">
-    <h1 style="font-size: 2em; text-shadow: 0 0 10px var(--super);">⚠️ DIQQAT ⚠️</h1>
-    <p style="border: 1px solid var(--super); padding: 15px; max-width: 400px;">
-        BU CHAT SHIFRLANGAN VA MAXFIY! ODDY ODAMLAR KIRISHI QAT'IYAN TAQIQLANADI. 
-        DAVOM ETISH BILAN BARCHA MAS'ULIYATNI O'Z BO'YNINGIZGA OLASIZ.
+    <h1 style="font-size: 2.5em; text-shadow: 0 0 15px var(--super);">[ XAVFSIZLIK TIZIMI ]</h1>
+    <p style="border: 1px solid var(--super); padding: 20px; max-width: 500px; line-height: 1.6;">
+        DIQQAT: USHBU CHAT TO'LIQ SHIFRLANGAN VA MAXFIYDIR. 
+        ODDIY FOYDALANUVCHILAR VA BEGONALAR KIRISHI QAT'IYAN TAQIQLANADI!
+        TIZIMGA KIRISH BILAN BARCHA QOIDALARGA ROZILIK BILDIRASIZ.
     </p>
-    <button onclick="confirmWarn()" style="width: 200px; border-color: var(--super); color: var(--super);">TASDIQLAYMAN</button>
+    <button onclick="confirmWarn()" style="width: 250px; border-color: var(--super); color: var(--super);">TASDIQLAYMAN</button>
 </div>
 
-<div class="glass-panel" id="main-panel">
+<div class="glass-panel">
     <!-- LOGIN SCREEN -->
     <div id="login-scr" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
-        <h2 style="text-align:center;">[ WHOAMI SEC ]</h2>
+        <h2 style="text-align:center; letter-spacing: 5px;">[ WHOAMI SEC ]</h2>
         <input type="text" id="nick-in" placeholder="IDENTIFIKATOR (NIK)..." oninput="checkRole(this.value)">
         <div id="pass-box" style="display:none;"><input type="password" id="pass-in" placeholder="MAXFIY KALIT..."></div>
         <button onclick="launch()">TIZIMNI YUKLASH</button>
@@ -86,53 +94,55 @@
 
     <!-- CHAT SCREEN -->
     <div id="chat-scr" style="display:none; flex-direction: column; height: 100%;">
-        <div style="display:flex; justify-content:space-between; font-size:0.7em; margin-bottom: 5px;">
-            <span>STATUS: <b id="online-count">0</b> ONLINE</span>
-            <button id="adm-btn" style="display:none; width:auto; padding:2px 8px; font-size:9px;" onclick="togglePanel('admin-panel')">CMD</button>
-            <button id="hlp-btn" style="display:none; width:auto; padding:2px 8px; font-size:9px;" onclick="togglePanel('helper-panel')">TOOLS</button>
+        <div style="display:flex; justify-content:space-between; font-size:0.75em; margin-bottom: 10px; border-bottom: 1px solid #222; padding-bottom: 5px;">
+            <span>STATUS: <b id="online-count">0</b> ONLAYN</span>
+            <div>
+                <button id="adm-btn" style="display:none; width:auto; padding:2px 10px; font-size:10px; border-color: var(--super);" onclick="togglePanel('admin-panel')">BOSHQARUV</button>
+                <button id="hlp-btn" style="display:none; width:auto; padding:2px 10px; font-size:10px; border-color: var(--sub);" onclick="togglePanel('helper-panel')">YORDAMCHI</button>
+            </div>
         </div>
         <div id="chat-container"></div>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="msg-in" placeholder="Xabar yozing (Enter)..." style="flex-grow:1">
-            <button onclick="send()" style="width:50px">></button>
+        <div style="display:flex; gap:8px;">
+            <input type="text" id="msg-in" placeholder="Xabarni kiriting (Enter)..." style="flex-grow:1">
+            <button onclick="send()" style="width:60px">></button>
         </div>
     </div>
 
     <!-- ADMIN PANEL -->
-    <div id="admin-panel" class="modal" style="border-color: var(--super);">
-        <h3 class="admin-txt">ROOT_ACCESS</h3>
-        <button onclick="sendAction('clear')">CHATNI TOZALASH</button>
-        <button onclick="sendAction('havf')" style="background:var(--super); color:white;">🚨 HAVF REJIMI</button>
-        <button onclick="toggleStealth()">NIQOBLANISH (USER69)</button>
-        <div style="display:flex; gap:5px;">
-            <button onclick="changeTheme('red')" style="font-size:8px;">QIZIL</button>
-            <button onclick="changeTheme('blue')" style="font-size:8px;">KO'K</button>
-            <button onclick="changeTheme('green')" style="font-size:8px;">YASHIL</button>
+    <div id="admin-panel" class="modal-panel">
+        <h3 class="admin-txt">ROOT_CONTROL_V16</h3>
+        <button onclick="sendAction('clear')">LOGLARNI TOZALASH</button>
+        <button onclick="sendAction('havf-shifr')" style="border-color: var(--sub)">🔐 HAVF: SHIFRLASH</button>
+        <button onclick="sendAction('havf-exit')" style="background:var(--super); color:white;">💀 HAVF: CHATNI YOPISH</button>
+        <button onclick="toggleStealth()">NIQOBLANISH: ON/OFF</button>
+        <div style="display:flex; gap:5px; margin-top:10px;">
+            <button onclick="changeTheme('red')" style="font-size:9px;">QIZIL FON</button>
+            <button onclick="changeTheme('blue')" style="font-size:9px;">KO'K FON</button>
+            <button onclick="changeTheme('green')" style="font-size:9px;">YASHIL FON</button>
         </div>
-        <button onclick="togglePanel('admin-panel')" style="margin-top:10px; border-color:#444">YOPISH</button>
+        <button onclick="togglePanel('admin-panel')" style="margin-top:15px; border-color:#555">YOPISH</button>
     </div>
 
     <!-- HELPER PANEL -->
-    <div id="helper-panel" class="modal" style="border-color: var(--sub);">
-        <h3 class="helper-txt">HELPER_MODE</h3>
+    <div id="helper-panel" class="modal-panel" style="border-color: var(--sub);">
+        <h3 class="helper-txt">HELPER_TOOLS</h3>
         <button onclick="sendAction('clear')">CHATNI TOZALASH</button>
-        <div style="display:flex; gap:5px;">
-            <button onclick="changeTheme('red')" style="font-size:8px;">QIZIL</button>
-            <button onclick="changeTheme('blue')" style="font-size:8px;">KO'K</button>
-            <button onclick="changeTheme('green')" style="font-size:8px;">YASHIL</button>
+        <div style="display:flex; gap:5px; margin-top:10px;">
+            <button onclick="changeTheme('red')" style="font-size:9px;">QIZIL</button>
+            <button onclick="changeTheme('blue')" style="font-size:9px;">KO'K</button>
         </div>
-        <button onclick="togglePanel('helper-panel')" style="margin-top:10px; border-color:#444">YOPISH</button>
+        <button onclick="togglePanel('helper-panel')" style="margin-top:15px; border-color:#555">YOPISH</button>
     </div>
 </div>
 
 <script>
     const ABLY_KEY = '7k7eJQ.wlzQCA:mT1OA_HGf29bZrs8s_kMJ2K39lR6UgNr1aOGks7ttds';
     const ably = new Ably.Realtime(ABLY_KEY);
-    const channel = ably.channels.get('whoami-v14-final');
+    const channel = ably.channels.get('whoami-v16-core');
 
     let myNick = "", myRole = "user", isStealth = false;
-    let havfActive = false;
-    const cryptKey = "WHOAMI_SECRET_NODE";
+    let shifrMode = false;
+    const cKey = "AES_SECRET_2026_WHOAMI";
 
     function confirmWarn() {
         document.getElementById('warn-screen').style.display = 'none';
@@ -147,7 +157,7 @@
     function launch() {
         myNick = document.getElementById('nick-in').value.trim();
         const p = document.getElementById('pass-in').value;
-        if(!myNick) return;
+        if(!myNick) return alert("Nikni kiriting!");
 
         if(myNick.toLowerCase() === "x-gab" && p === "6969") { 
             myRole = "admin"; document.getElementById('adm-btn').style.display = 'block'; 
@@ -158,7 +168,10 @@
         document.getElementById('login-scr').style.display = 'none';
         document.getElementById('chat-scr').style.display = 'flex';
 
-        if(myRole !== "admin") channel.publish('sys', { type: 'join', user: myNick });
+        // Faqat admin bo'lmasa kirish xabari ketadi
+        if(myRole !== "admin") {
+            channel.publish('sys', { type: 'join', user: myNick });
+        }
 
         channel.subscribe('msg', (m) => renderMsg(m.data));
         channel.subscribe('sys', (m) => handleSys(m.data));
@@ -174,7 +187,6 @@
         let dRole = isStealth ? "user" : myRole;
         let dAv = (dRole === "admin") ? "👑" : (dRole === "helper" ? "🛡️" : "👤");
 
-        // Yangi xabarlar shifrlanmasligi uchun shunchaki matn yuboramiz
         channel.publish('msg', { 
             nick: dNick, 
             text: inp.value, 
@@ -184,7 +196,10 @@
         inp.value = '';
     }
 
-    document.getElementById('msg-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
+    // ENTER TUGMASI BILAN YUBORISH
+    document.getElementById('msg-in').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') send();
+    });
 
     function renderMsg(data) {
         const box = document.getElementById('chat-container');
@@ -194,31 +209,33 @@
         let nStyle = (data.role === 'admin') ? 'admin-txt' : (data.role === 'helper' ? 'helper-txt' : '');
         let rTag = (data.role === 'admin') ? ' [ADMIN]' : (data.role === 'helper' ? ' [HELPER]' : '');
         
-        // Agar havf rejimi yoqilsa, xabar shifrga aylanadi
-        let displayText = havfActive ? CryptoJS.AES.encrypt(data.text, cryptKey).toString().substring(0, 25) + "..." : data.text;
+        // Agar havf shifrlash rejimi yoqilgan bo'lsa, eski xabarlar shifr ko'rinadi
+        let outText = shifrMode ? CryptoJS.AES.encrypt(data.text, cKey).toString().substring(0, 30) + "..." : data.text;
 
-        div.innerHTML = `<span class="${nStyle}">${data.av}${rTag} ${data.nick}:</span> <span>${displayText}</span>`;
+        div.innerHTML = `<span class="${nStyle}">${data.av}${rTag} ${data.nick}:</span> <span>${outText}</span>`;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
     }
 
     function handleSys(data) {
         const box = document.getElementById('chat-container');
-        if(data.type === 'join') {
-            box.innerHTML += `<div class="sys-msg">>> ${data.user} TARMOQQA ULANDI</div>`;
+        if(data.type === 'join' && myRole === 'admin') {
+            box.innerHTML += `<div class="sys-msg">>> ${data.user} TARMOQQA ULASHDI</div>`;
         } else if(data.type === 'clear') {
-            box.innerHTML = '<div class="sys-msg" style="color:var(--neon)">CHAT TOZALANDI</div>';
+            box.innerHTML = '<div class="sys-msg" style="color:var(--neon); border: 1px dashed var(--neon); padding: 5px;">[ CHAT TOZALANDI ]</div>';
         } else if(data.type === 'theme') {
             document.getElementById('main-body').className = 'neon-bg-' + data.color;
-        } else if(data.type === 'havf') {
-            havfActive = true;
-            // Hammaning xabarlarini shifrlab ko'rsatish (qayta yuklash kabi effekt)
-            const msgs = document.querySelectorAll('.msg span:last-child');
-            msgs.forEach(m => m.innerText = "ENC_" + Math.random().toString(36).substring(7));
-            
+        } else if(data.type === 'havf-shifr') {
+            shifrMode = true;
+            // Chatdagi bor xabarlarni vizual o'zgartirish
+            const allSpans = document.querySelectorAll('.msg span:last-child');
+            allSpans.forEach(s => s.innerText = "X_SHIFR_" + Math.random().toString(36).substring(7));
+            box.innerHTML += `<div class="sys-msg" style="color:var(--super); border:1px solid var(--super);">🚨 OLDINGI YOZISHMALAR SHIFRLANDI!</div>`;
+        } else if(data.type === 'havf-exit') {
             if(myRole !== 'admin') {
-                alert("CHAT HAVF OSTIDA! CHATDAN CHIQING!");
-                box.innerHTML += `<div style="color:var(--super); text-align:center; font-weight:bold; border:1px solid var(--super); margin:10px 0;">🚨 CHAT HAVF OSTIDA CHATDAN CHIQING!</div>`;
+                box.innerHTML = "";
+                document.body.innerHTML = "<div style='color:red; text-align:center; margin-top:20%'><h1>🚨 CHAT HAVF OSTIDA!</h1><p>ADMIN CHATNI YOPDI. TIZIMDAN CHIQARILDINGIZ.</p></div>";
+                setTimeout(() => location.reload(), 4000);
             }
         }
         box.scrollTop = box.scrollHeight;
@@ -231,7 +248,7 @@
 
     function toggleStealth() {
         isStealth = !isStealth;
-        alert(isStealth ? "Niqoblanish: user69 faol" : "Niqoblanish o'chirildi");
+        alert(isStealth ? "Niqoblanish yoqildi: user69" : "Niqoblanish o'chirildi.");
     }
 
     function sendAction(t) { channel.publish('sys', { type: t }); }
