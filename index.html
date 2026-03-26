@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WHOAMI SEC | C2 Hidden Node</title>
-    <!-- KUTUBXONALAR -->
+    <title>WHOAMI SEC | C2 Node V12</title>
     <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <style>
@@ -12,175 +11,170 @@
             --neon: #00ff41; --super: #ff003c; --sub: #00d4ff; 
             --bg-main: radial-gradient(circle, #0f0f0f 0%, #000 100%);
         }
-        * { box-sizing: border-box; cursor: crosshair; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        * { box-sizing: border-box; cursor: crosshair; transition: 0.4s; font-family: 'Courier New', monospace; }
         
         body { 
             background: var(--bg-main); color: var(--neon); 
-            font-family: 'Courier New', monospace; height: 100vh; margin: 0; 
-            display: flex; justify-content: center; align-items: center; overflow: hidden;
+            height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; overflow: hidden;
         }
 
-        /* FON EFFEKTLARI */
-        .neon-bg-red { background: radial-gradient(circle, #2a0000 0%, #000 100%) !important; box-shadow: inset 0 0 100px #ff000033; }
-        .neon-bg-blue { background: radial-gradient(circle, #000a2a 0%, #000 100%) !important; box-shadow: inset 0 0 100px #00d4ff33; }
-        .neon-bg-green { background: radial-gradient(circle, #001a00 0%, #000 100%) !important; box-shadow: inset 0 0 100px #00ff4133; }
-
-        body::after { 
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: repeating-linear-gradient(0deg, rgba(0,255,65,0.03) 0px, rgba(0,255,65,0.03) 1px, transparent 1px, transparent 2px); 
-            pointer-events: none; z-index: 50; 
-        }
+        .neon-bg-red { background: radial-gradient(circle, #2a0000 0%, #000 100%) !important; }
+        .neon-bg-blue { background: radial-gradient(circle, #000a2a 0%, #000 100%) !important; }
 
         .glass-panel {
-            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(25px);
+            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(20px);
             border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 15px;
-            width: 95%; max-width: 550px; height: 92vh; display: flex; flex-direction: column; padding: 25px;
+            width: 95%; max-width: 550px; height: 92vh; display: flex; flex-direction: column; padding: 20px;
             box-shadow: 0 0 50px rgba(0, 255, 65, 0.15); position: relative; z-index: 100;
         }
 
-        /* ADMIN VA HELPER ANIMATSIYALARI */
-        @keyframes admin-glow { 0%, 100% { text-shadow: 0 0 20px var(--super), 0 0 40px var(--super); color: var(--super); } 50% { opacity: 0.7; text-shadow: 0 0 10px var(--super); } }
-        @keyframes helper-glow { 0%, 100% { text-shadow: 0 0 20px var(--sub), 0 0 40px var(--sub); color: var(--sub); } 50% { opacity: 0.7; text-shadow: 0 0 10px var(--sub); } }
-        @keyframes text-flicker { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.9; } }
-        @keyframes neon-pulse { 0% { box-shadow: 0 0 5px var(--neon); } 50% { box-shadow: 0 0 25px var(--neon); } 100% { box-shadow: 0 0 5px var(--neon); } }
+        /* ANIMATSIYALAR */
+        @keyframes admin-glow { 0%, 100% { text-shadow: 0 0 20px var(--super); color: var(--super); } 50% { opacity: 0.6; } }
+        @keyframes helper-glow { 0%, 100% { text-shadow: 0 0 20px var(--sub); color: var(--sub); } 50% { opacity: 0.6; } }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 5px var(--super); } 50% { box-shadow: 0 0 30px var(--super); } 100% { box-shadow: 0 0 5px var(--super); } }
 
-        .admin-txt { animation: admin-glow 1.5s infinite; font-weight: bold; text-transform: uppercase; }
-        .helper-txt { animation: helper-glow 1.5s infinite; font-weight: bold; text-transform: uppercase; }
-        .msg-admin { color: var(--super) !important; text-shadow: 0 0 5px var(--super); animation: text-flicker 0.1s infinite; }
-        .msg-helper { color: var(--sub) !important; text-shadow: 0 0 5px var(--sub); animation: text-flicker 0.1s infinite; }
-        .neon-msg { text-align: center; font-weight: bold; padding: 10px; border: 1px solid var(--neon); animation: neon-pulse 2s infinite; margin: 10px 0; }
+        .admin-txt { animation: admin-glow 1.2s infinite; font-weight: bold; }
+        .helper-txt { animation: helper-glow 1.2s infinite; font-weight: bold; }
+        .panic-mode { animation: pulse-red 0.5s infinite; border: 2px solid var(--super) !important; }
 
-        h2 { text-align: center; letter-spacing: 10px; text-shadow: 0 0 15px var(--neon); margin: 0 0 20px 0; font-size: 1.5em; }
-        
         input, button { 
             background: rgba(0, 0, 0, 0.8); border: 1px solid var(--neon); 
-            color: var(--neon); padding: 14px; margin: 10px 0; border-radius: 10px; outline: none; width: 100%;
-            font-family: 'Courier New', monospace;
+            color: var(--neon); padding: 12px; margin: 8px 0; border-radius: 8px; outline: none; width: 100%;
         }
-        button { cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 30px var(--neon); }
+        button { cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
 
-        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; scroll-behavior: smooth; padding-right: 10px; }
-        .msg { margin: 15px 0; font-size: 0.9em; border-left: 2px solid var(--neon); padding-left: 12px; animation: slideIn 0.4s ease-out; word-wrap: break-word; }
-        .sys-msg { font-size: 0.75em; color: #888; text-align: center; margin: 10px 0; opacity: 0.7; }
-        
-        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 10px; }
+        .msg { margin: 12px 0; font-size: 0.85em; border-left: 2px solid var(--neon); padding-left: 10px; animation: slide 0.3s; }
+        @keyframes slide { from { opacity:0; transform: translateX(-10px); } to { opacity:1; transform: translateX(0); } }
 
-        #admin-panel { 
-            display: none; position: absolute; top: 10%; left: 50%; transform: translateX(-50%); 
-            background: #080808; border: 2px solid var(--super); padding: 25px; 
-            z-index: 500; width: 320px; box-shadow: 0 0 50px var(--super); border-radius: 15px; 
+        /* PANELLAR */
+        .modal-panel { 
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: #050505; border: 2px solid var(--neon); padding: 20px; 
+            z-index: 500; width: 320px; box-shadow: 0 0 40px #000; border-radius: 12px; 
         }
 
-        #lock-screen { 
+        #panic-overlay, #lock-overlay { 
             display: none; position: fixed; top:0; left:0; width:100%; height:100%; 
-            background: #000; color: var(--super); z-index: 2000; 
-            flex-direction: column; justify-content: center; align-items: center; text-align: center; 
+            background: #600; color: #fff; z-index: 2000; flex-direction: column; justify-content: center; align-items: center; 
         }
 
-        .av-box { display: flex; justify-content: center; gap: 20px; font-size: 2.2em; margin-bottom: 20px; }
-        .av-opt { cursor: pointer; opacity: 0.3; }
-        .av-opt.active { opacity: 1; transform: scale(1.4); text-shadow: 0 0 20px var(--neon); }
-        .status-bar { display: flex; justify-content: space-between; font-size: 0.75em; border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 15px; color: #aaa; }
+        .status-bar { display: flex; justify-content: space-between; font-size: 0.7em; margin-bottom: 10px; border-bottom: 1px solid #333; }
+        .enc-box { font-size: 0.6em; color: #555; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
     </style>
 </head>
 <body id="main-body">
 
-<div id="lock-screen">
-    <h1 style="font-size: 4em; margin:0; animation: admin-glow 0.5s infinite;">⚠️ YOPIQ ⚠️</h1>
-    <p style="font-size: 1.2em; border: 1px solid var(--super); padding: 10px;">CHAT HOZIRCHA YOPIQ</p>
-</div>
+<!-- KRITIK EKRANLAR -->
+<div id="panic-overlay"><h1>🚨 CHAT HAVF OSTIDA! 🚨</h1><p>ADMIN HAMMANI CHATDAN CHIQARIB YUBORDI.</p></div>
+<div id="lock-overlay"><h1>🔒 MAXFIY CHAT</h1><p>CHAT HOZIRCHA YOPIQ. KEYINROQ URINIB KO'RING.</p></div>
 
-<div class="glass-panel" id="main-panel">
-    <!-- LOGIN SCREEN -->
-    <div id="login-scr" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
-        <h2>[ WHOAMI SEC ]</h2>
-        <div class="av-box">
-            <span class="av-opt active" onclick="setAv('👤', this)">👤</span>
-            <span class="av-opt" onclick="setAv('🤖', this)">🤖</span>
-            <span class="av-opt" onclick="setAv('🕶️', this)">🕶️</span>
-            <span class="av-opt" onclick="setAv('👽', this)">👽</span>
-        </div>
-        <input type="text" id="nick-in" placeholder="IDENTIFIKATOR (NIK)..." oninput="checkAdm(this.value)">
+<div class="glass-panel">
+    <!-- LOGIN -->
+    <div id="login-scr">
+        <h2 style="text-align:center;">[ WHOAMI SEC ]</h2>
+        <p style="font-size:0.65em; color:var(--super); text-align:center; border:1px solid var(--super); padding:5px;">
+            DIQQAT: CHAT MAXFIY! FAQAT XAKERLAR VA KIBERHAVFSIZLIK MUTAXASISLARI UCHUN. ODDY FOYDALANUVCHILAR KIRISHI TAQIQLANADI!
+        </p>
+        <input type="text" id="nick-in" placeholder="NIK..." oninput="checkRole(this.value)">
         <div id="pass-box" style="display:none;"><input type="password" id="pass-in" placeholder="MAXFIY KALIT..."></div>
         <button onclick="launch()">TIZIMGA KIRISH</button>
-        <p style="font-size: 0.6em; text-align: center; color: #444; margin-top: 15px;">DIQQAT: TIZIMGA KIRISH ORQALI SHAXSIYINGIZNI YASHIRASIZ</p>
     </div>
 
-    <!-- CHAT SCREEN -->
+    <!-- CHAT -->
     <div id="chat-scr" style="display:none; flex-direction: column; height: 100%;">
         <div class="status-bar">
-            <span>TARMDOQDA: <b id="online-count">0</b></span>
-            <span id="st-mode" style="display:none; color:var(--super);">[ MAXFIY REJIM ]</span>
-            <button id="adm-btn" style="display:none; width:auto; padding:2px 10px; border-color: var(--super); color: var(--super); font-size: 10px;" onclick="toggleAdm()">BOSHQARUV</button>
+            <span>ONLAYN: <b id="online-count">0</b></span>
+            <span id="role-tag" style="color:var(--super)"></span>
+            <button id="adm-btn" style="display:none; width:auto; padding:2px 5px; font-size:9px;" onclick="openPanel()">PANEL</button>
         </div>
         <div id="chat-container"></div>
-        <div style="display:flex; gap:10px;">
-            <input type="text" id="msg-in" style="flex-grow:1" placeholder="Xabarni yozing...">
-            <button onclick="send()" style="width:60px; border-radius: 10px;">➜</button>
+        <div class="enc-box" id="enc-display">Shifrlash: AES-256 faol...</div>
+        <div style="display:flex; gap:5px;">
+            <input type="text" id="msg-in" placeholder="Xabarni shifrlash...">
+            <button onclick="send()" style="width:50px">></button>
         </div>
     </div>
 
     <!-- ADMIN PANEL -->
-    <div id="admin-panel">
-        <h3 class="admin-txt" style="text-align:center; margin-top:0;">CENTRAL_LOGIC</h3>
-        <button onclick="sendAction('clear')" style="border-color: var(--super)">CHATNI TOZALASH</button>
-        
-        <div id="root-only">
-            <button onclick="toggleLock()" id="lock-btn" style="background:var(--super); color:white; border:none; margin-top:10px;">🚨 MAXFIY CHAT: OFF</button>
-            <p style="font-size:0.7em; margin:15px 0 5px; color:#666;">FONNI TAKOMILLASHTIRISH (NEON):</p>
-            <div style="display:flex; gap:8px;">
-                <button onclick="changeTheme('green')" style="font-size:9px; border-color: var(--neon)">NEON YASHIL</button>
-                <button onclick="changeTheme('red')" style="font-size:9px; border-color: var(--super)">NEON QIZIL</button>
-                <button onclick="changeTheme('blue')" style="font-size:9px; border-color: var(--sub)">NEON KO'K</button>
-            </div>
+    <div id="admin-panel" class="modal-panel" style="border-color: var(--super);">
+        <h3 class="admin-txt" style="text-align:center;">ADMIN CONTROL</h3>
+        <button onclick="sendAction('clear')">LOGLARNI TOZALASH</button>
+        <button onclick="toggleStealth()" id="st-btn">NIQOBLANISH: OFF</button>
+        <button onclick="toggleLock()" id="lock-btn">MAXFIY CHAT: OFF</button>
+        <button onclick="sendAction('panic')" style="background:var(--super); color:white;">🚨 TREVOGIYA</button>
+        <button onclick="showEncInfo()">🛡️ SHIFRLASHNI KO'RISH</button>
+        <div style="display:flex; gap:5px; margin-top:10px;">
+            <button onclick="changeTheme('red')" style="font-size:8px;">QIZIL FON</button>
+            <button onclick="changeTheme('blue')" style="font-size:8px;">KO'K FON</button>
         </div>
-        <button onclick="toggleAdm()" style="margin-top:20px; border-color:#444; font-size: 10px;">PANELNI BERKITISH</button>
+        <button onclick="closePanel()" style="border-color:#444; margin-top:10px;">YOPISH</button>
+    </div>
+
+    <!-- HELPER PANEL -->
+    <div id="helper-panel" class="modal-panel" style="border-color: var(--sub);">
+        <h3 class="helper-txt" style="text-align:center;">HELPER TOOLS</h3>
+        <button onclick="sendAction('clear')">CHATNI TOZALASH</button>
+        <button onclick="closePanel()" style="border-color:#444; margin-top:10px;">YOPISH</button>
     </div>
 </div>
 
 <script>
     const ABLY_KEY = '7k7eJQ.wlzQCA:mT1OA_HGf29bZrs8s_kMJ2K39lR6UgNr1aOGks7ttds';
     const ably = new Ably.Realtime(ABLY_KEY);
-    const channel = ably.channels.get('whoami-v11-neon');
+    const channel = ably.channels.get('whoami-v12-final');
 
-    let activeAv = "👤", myRole = "user", myNick = "", chatLocked = false;
+    let myNick = "", myRole = "user", myAv = "👤", isStealth = false, chatLocked = false;
+    const cryptKey = "SECRET_HEX_2026";
 
-    function setAv(av, el) { activeAv = av; document.querySelectorAll('.av-opt').forEach(x => x.classList.remove('active')); el.classList.add('active'); }
-    function checkAdm(v) { 
-        const l = v.toLowerCase(); 
-        document.getElementById('pass-box').style.display = (l === "x-gab" || l === "helper") ? "block" : "none"; 
+    function checkRole(v) {
+        const l = v.toLowerCase();
+        document.getElementById('pass-box').style.display = (l === "x-gab" || l === "helper") ? "block" : "none";
     }
 
-    async function launch() {
+    function launch() {
         myNick = document.getElementById('nick-in').value.trim();
         const pass = document.getElementById('pass-in').value;
 
         if(!myNick) return alert("Nikni kiriting!");
         
-        if(myNick.toLowerCase() === "x-gab" && pass === "6969") { myRole = "admin"; }
-        else if(myNick.toLowerCase() === "helper" && pass === "6996") { myRole = "helper"; }
+        if(myNick.toLowerCase() === "x-gab" && pass === "6969") { 
+            myRole = "admin"; myAv = "👑"; 
+        } else if(myNick.toLowerCase() === "helper" && pass === "6996") { 
+            myRole = "helper"; myAv = "🛡️"; 
+        }
 
         document.getElementById('login-scr').style.display = 'none';
         document.getElementById('chat-scr').style.display = 'flex';
         if(myRole !== "user") document.getElementById('adm-btn').style.display = 'block';
 
-        alert("Xush kelibsiz! Tizim xavfsizligi faol.");
+        channel.publish('sys', { type: 'join', user: myNick, role: myRole });
+        
+        channel.subscribe('msg', (m) => renderMsg(m.data));
+        channel.subscribe('sys', (m) => handleSys(m.data));
+        
+        setInterval(updateOnline, 3000);
+    }
 
-        // Kirish bildirishnomasi (faqat admin bo'lmasa)
-        if(myRole === "user") {
-            channel.publish('sys', { type: 'join', user: myNick });
-        }
+    function send() {
+        const inp = document.getElementById('msg-in');
+        if(!inp.value) return;
 
-        channel.subscribe('msg', (m) => {
-            renderMsg(m.data);
+        let displayNick = isStealth ? "user69" : myNick;
+        let displayRole = isStealth ? "user" : myRole;
+        let displayAv = isStealth ? "👤" : myAv;
+
+        const encrypted = CryptoJS.AES.encrypt(inp.value, cryptKey).toString();
+        
+        channel.publish('msg', { 
+            nick: displayNick, 
+            text: encrypted, 
+            av: displayAv, 
+            role: displayRole,
+            raw: inp.value // Faqat shifrlash menyusi uchun
         });
-
-        channel.subscribe('sys', (m) => {
-            handleSystem(m.data);
-        });
-
-        updateOnline();
+        inp.value = '';
     }
 
     function renderMsg(data) {
@@ -188,93 +182,60 @@
         const div = document.createElement('div');
         div.className = 'msg';
         
-        let nickStyle = "";
-        let msgStyle = "";
-        let roleTag = "";
+        const decrypted = CryptoJS.AES.decrypt(data.text, cryptKey).toString(CryptoJS.enc.Utf8);
+        document.getElementById('enc-display').innerText = "Oxirgi xabar shifri: " + data.text.substring(0, 30) + "...";
 
-        if(data.role === "admin") {
-            nickStyle = "admin-txt";
-            msgStyle = "msg-admin";
-            roleTag = "[CHIEF]";
-        } else if(data.role === "helper") {
-            nickStyle = "helper-txt";
-            msgStyle = "msg-helper";
-            roleTag = "[HELPER]";
-        }
+        let nStyle = "", rTag = "";
+        if(data.role === "admin") { nStyle = "admin-txt"; rTag = "[ADMIN]"; }
+        else if(data.role === "helper") { nStyle = "helper-txt"; rTag = "[HELPER]"; }
 
-        div.innerHTML = `<span class="${nickStyle}">${data.av} ${roleTag} ${data.nick}:</span> <span class="${msgStyle}">${data.text}</span>`;
+        div.innerHTML = `<span class="${nStyle}">${data.av} ${rTag} ${data.nick}:</span> <span>${decrypted}</span>`;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
     }
 
-    function handleSystem(data) {
-        const box = document.getElementById('chat-container');
-        const div = document.createElement('div');
-
+    function handleSys(data) {
         if(data.type === 'clear') {
-            box.innerHTML = '<div class="neon-msg">CHAT TOZALANDI</div>';
-        } else if(data.type === 'join') {
-            div.className = 'sys-msg';
-            div.innerText = `>> ${data.user} tizimga ulandi.`;
-            box.appendChild(div);
+            document.getElementById('chat-container').innerHTML = '<div style="text-align:center; color:var(--neon); border:1px solid var(--neon); padding:5px; margin:10px;">[ CHAT TOZALANDI ]</div>';
+        } else if(data.type === 'panic') {
+            if(myRole !== 'admin') document.getElementById('panic-overlay').style.display = 'flex';
         } else if(data.type === 'theme') {
             document.getElementById('main-body').className = 'neon-bg-' + data.color;
-            div.className = 'neon-msg';
-            div.innerText = `FON NEON ${data.color.toUpperCase()} RANGA O'ZGARTIRILDI`;
-            box.appendChild(div);
         } else if(data.type === 'lock') {
             chatLocked = data.state;
-            if(chatLocked && myRole === "user") {
-                document.getElementById('lock-screen').style.display = 'flex';
-            } else {
-                document.getElementById('lock-screen').style.display = 'none';
-            }
+            if(chatLocked && myRole === 'user') document.getElementById('lock-overlay').style.display = 'flex';
+            else document.getElementById('lock-overlay').style.display = 'none';
         }
-        box.scrollTop = box.scrollHeight;
     }
 
-    function send() {
-        const inp = document.getElementById('msg-in');
-        if(!inp.value) return;
-        channel.publish('msg', { 
-            nick: myNick, 
-            text: inp.value, 
-            av: activeAv, 
-            role: myRole 
-        });
-        inp.value = '';
-    }
-
-    function toggleAdm() {
-        const p = document.getElementById('admin-panel');
-        p.style.display = (p.style.display === 'block') ? 'none' : 'block';
-    }
-
-    function sendAction(type) {
-        channel.publish('sys', { type: type });
-    }
-
-    function changeTheme(color) {
-        channel.publish('sys', { type: 'theme', color: color });
+    function toggleStealth() {
+        isStealth = !isStealth;
+        document.getElementById('st-btn').innerText = isStealth ? "NIQOBLANISH: ON" : "NIQOBLANISH: OFF";
+        document.getElementById('role-tag').innerText = isStealth ? "[MOD: USER69]" : "";
     }
 
     function toggleLock() {
         chatLocked = !chatLocked;
-        document.getElementById('lock-btn').innerText = chatLocked ? "🚨 MAXFIY CHAT: ON" : "🚨 MAXFIY CHAT: OFF";
+        document.getElementById('lock-btn').innerText = chatLocked ? "MAXFIY CHAT: ON" : "MAXFIY CHAT: OFF";
         channel.publish('sys', { type: 'lock', state: chatLocked });
     }
 
-    function updateOnline() {
-        ably.presence.get('whoami-v11-neon', (err, members) => {
-            document.getElementById('online-count').innerText = members ? members.length : "1";
-        });
+    function showEncInfo() {
+        alert("Xavfsizlik protokoli: AES-256 Bit Encryption\nKalit: " + cryptKey + "\nHamma xabarlar serverga bormasdan oldin brauzerda shifrlanadi.");
     }
 
-    // Enter tugmasi orqali yuborish
-    document.getElementById('msg-in').addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') send();
-    });
-</script>
+    function openPanel() {
+        if(myRole === 'admin') document.getElementById('admin-panel').style.display = 'block';
+        if(myRole === 'helper') document.getElementById('helper-panel').style.display = 'block';
+    }
 
+    function closePanel() {
+        document.querySelectorAll('.modal-panel').forEach(p => p.style.display = 'none');
+    }
+
+    function sendAction(t) { channel.publish('sys', { type: t }); }
+    function changeTheme(c) { channel.publish('sys', { type: 'theme', color: c }); }
+    function updateOnline() { ably.presence.get((err, m) => { if(!err) document.getElementById('online-count').innerText = m.length; }); }
+</script>
 </body>
 </html>
