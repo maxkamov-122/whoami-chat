@@ -35,11 +35,9 @@
 
         @keyframes admin-blink { 0%, 100% { text-shadow: 0 0 20px var(--super); color: var(--super); } 50% { opacity: 0.4; } }
         @keyframes helper-blink { 0%, 100% { text-shadow: 0 0 20px var(--sub); color: var(--sub); } 50% { opacity: 0.4; } }
-        @keyframes glitch-fast { 0% { transform: translate(0); } 10% { transform: translate(-2px, 2px); } 20% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
         
         .super-glow { animation: admin-blink 1s infinite !important; font-weight: bold; }
         .helper-glow { animation: helper-blink 1s infinite !important; font-weight: bold; }
-        .encrypt-mode { animation: glitch-fast 0.1s infinite; border: 2px solid var(--super) !important; }
 
         h2 { text-align: center; letter-spacing: 8px; text-shadow: 0 0 10px var(--neon); margin: 0 0 15px 0; }
         
@@ -56,6 +54,7 @@
         
         @keyframes slideIn { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
+        /* OGOHLANTIRISH EKRANI */
         #entry-warning {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000;
             z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; text-align: center;
@@ -72,16 +71,18 @@
 </head>
 <body>
 
+<!-- 1. KIRISH OGOHLANTIRISHI -->
 <div id="entry-warning">
-    <h1 style="color: var(--super); letter-spacing: 5px;">[ CAUTION: SECURE NODE ]</h1>
-    <p style="max-width: 500px; color: var(--neon); font-size: 0.9em;">
-        FAQAT CYBERSEC VA DEVLAR UCHUN. ODDIY FOYDALANUVCHILAR TAQIQLANGAN. 
+    <h1 style="color: var(--super); letter-spacing: 5px; font-size: 1.8em;">[ DIQQAT: MAXFIY TUGUN ]</h1>
+    <p style="max-width: 500px; color: var(--neon); font-size: 0.9em; line-height: 1.5;">
+        FAQAT HACKERLAR VA KIBER HAVFSIZLIK MUTAXASISLAR UCHUN. ODDIY FOYDALANUVCHILARGA TAQIQLANGAN. 
         BUNING ICHI TO'LIQ SHIFRLANGAN VA ANONIM.
     </p>
-    <button style="width: 220px; margin-top: 20px;" onclick="document.getElementById('entry-warning').style.display='none'">[ KIRISH ]</button>
+    <button style="width: 200px; margin-top: 25px;" onclick="document.getElementById('entry-warning').style.display='none'">[ KIRISH ]</button>
 </div>
 
 <div class="glass-panel" id="main-panel">
+    <!-- LOGIN EKRANI -->
     <div id="login-scr" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
         <h2>[ WHOAMI SEC ]</h2>
         <div class="av-box" style="display:flex; justify-content:center; gap:15px; font-size:2em; margin-bottom:15px;">
@@ -90,15 +91,16 @@
             <span class="av-opt" onclick="setAv('🕶️', this)">🕶️</span>
             <span class="av-opt" onclick="setAv('👽', this)">👽</span>
         </div>
-        <input type="text" id="nick-in" placeholder="NIK KIRITING..." oninput="checkAdm(this.value)">
-        <div id="pass-box" style="display:none;"><input type="password" id="pass-in" placeholder="PASSKEY..."></div>
-        <button onclick="launch()">INITIALIZE</button>
+        <input type="text" id="nick-in" placeholder="NIKNI KIRITING..." oninput="checkAdm(this.value)">
+        <div id="pass-box" style="display:none;"><input type="password" id="pass-in" placeholder="MAXFIY KALIT..."></div>
+        <button onclick="launch()">TIZIMNI YUKLASH</button>
     </div>
 
+    <!-- CHAT EKRANI -->
     <div id="chat-scr" style="display:none; flex-direction: column; height: 100%;">
         <div class="status-bar">
             <span>ONLAYN: <b id="online-count">0</b></span>
-            <span id="ghost-status" style="display:none; color:var(--super);">[ GHOST ]</span>
+            <span id="ghost-status" style="display:none; color:var(--super);">[ GHOST REJIMI ]</span>
             <button id="adm-btn" style="display:none; width:auto; padding:2px 8px; border-color: var(--super); color: var(--super);" onclick="toggleAdm()">[CMD]</button>
         </div>
         <div id="chat-container"></div>
@@ -108,10 +110,11 @@
         </div>
     </div>
 
+    <!-- ADMIN PANEL -->
     <div id="admin-panel">
         <h4 id="adm-title" class="super-glow" style="text-align:center; margin-top:0;">ROOT_CONTROL</h4>
         <button onclick="sendAction('clear')" style="border-color: var(--super)">LOGLARNI TOZALASH</button>
-        <button onclick="toggleGhost()" id="ghost-btn" style="border-color: var(--sub)">👻 GHOST MODE: OFF</button>
+        <button onclick="toggleGhost()" id="ghost-btn" style="border-color: var(--sub)">👻 GHOST REJIMI: OFF</button>
         
         <div id="root-only">
             <button onclick="sendAction('force-enc')" style="background: var(--super); color:white; border:none; margin-top:10px;">🛡️ BARCHANI SHIFRLASH</button>
@@ -122,17 +125,17 @@
                 <button onclick="sendAction('bg-2')" style="font-size: 8px;">KO'K</button>
             </div>
         </div>
-        <button onclick="toggleAdm()" style="margin-top:10px; border-color:#555">BACK</button>
+        <button onclick="toggleAdm()" style="margin-top:10px; border-color:#555">ORQAGA</button>
     </div>
 </div>
 
 <script>
     const ABLY_KEY = '7k7eJQ.wlzQCA:mT1OA_HGf29bZrs8s_kMJ2K39lR6UgNr1aOGks7ttds';
     const ably = new Ably.Realtime(ABLY_KEY);
-    const channel = ably.channels.get('whoami-v7-node');
+    const channel = ably.channels.get('whoami-v8-node');
 
     let activeAv = "👤", myRole = "user", myNick = "", mKey = "WHOAMI_XGAB_2026_SECURE_NODE";
-    let isGhost = false, ghostKey = "SECRET_GHOST_666";
+    let isGhost = false, ghostKey = "SECRET_GHOST_666_KEY";
 
     function setAv(av, el) { activeAv = av; document.querySelectorAll('.av-opt').forEach(x => x.classList.remove('active')); el.classList.add('active'); }
     function checkAdm(v) { 
@@ -165,16 +168,23 @@
             div.setAttribute('data-content', m.data.content);
             
             try {
-                const keyToUse = m.data.isG ? ghostKey : mKey;
-                const dec = CryptoJS.AES.decrypt(m.data.content, keyToUse).toString(CryptoJS.enc.Utf8);
+                // Ghost rejimini tekshirish
+                let keyToUse = m.data.isG ? ghostKey : mKey;
+                let dec = CryptoJS.AES.decrypt(m.data.content, keyToUse).toString(CryptoJS.enc.Utf8);
                 
                 let glow = "", tag = "";
                 if(m.data.role === 'super') { glow = "class='super-glow'"; tag = "<span class='super-glow'>[ADMIN]</span> "; }
                 if(m.data.role === 'helper') { glow = "class='helper-glow'"; tag = "<span class='helper-glow'>[HELPER]</span> "; }
 
-                if(dec) div.innerHTML = `<span>${m.data.av}</span> ${tag}<b ${glow}>${m.data.sender}:</b> <span class="txt">${dec}</span>`;
-                else div.innerHTML = `<span>${m.data.av}</span> ${tag}<b ${glow}>${m.data.sender}:</b> <span class="txt" style="color:#444">[ ENCRYPTED_DATA ]</span>`;
-            } catch(e) { div.innerHTML = `<span>${m.data.av}</span> <b style="color:#555">${m.data.sender}:</b> <span class="txt" style="color:#444">[ ERROR ]</span>`; }
+                if(dec) {
+                    div.innerHTML = `<span>${m.data.av}</span> ${tag}<b ${glow}>${m.data.sender}:</b> <span class="txt">${dec}</span>`;
+                } else {
+                    // Agar shifr ochilmasa (user uchun ghost xabar)
+                    div.innerHTML = `<span>${m.data.av}</span> ${tag}<b ${glow}>${m.data.sender}:</b> <span class="txt" style="color:#444">[ SHIFRLANGAN MA'LUMOT ]</span>`;
+                }
+            } catch(e) { 
+                div.innerHTML = `<span>${m.data.av}</span> <b style="color:#555">${m.data.sender}:</b> <span class="txt" style="color:#444">[ ERROR ]</span>`; 
+            }
             
             container.appendChild(div); container.scrollTop = container.scrollHeight;
             setTimeout(() => { div.style.opacity="0"; setTimeout(()=>div.remove(),1000); }, 300000);
@@ -183,22 +193,20 @@
         channel.subscribe('system', (m) => {
             if(m.data.type === 'clear') document.getElementById('chat-container').innerHTML = "";
             if(m.data.type === 'force-enc') {
-                document.querySelectorAll('.msg').forEach(msg => {
-                    const txtSpan = msg.querySelector('.txt');
-                    if(txtSpan) { txtSpan.innerText = msg.getAttribute('data-content').substring(0, 20) + "..."; txtSpan.style.color = "var(--super)"; }
+                document.querySelectorAll('.msg .txt').forEach(t => {
+                    t.innerText = "###### SHIFRLANGAN ######";
+                    t.style.color = "var(--super)";
                 });
-                document.getElementById('main-panel').classList.add('encrypt-mode');
-                setTimeout(() => document.getElementById('main-panel').classList.remove('encrypt-mode'), 1000);
             }
             if(m.data.type.startsWith('bg-')) {
                 const colors = ['#000', 'radial-gradient(circle, #200000 0%, #000 100%)', 'radial-gradient(circle, #001a20 0%, #000 100%)'];
-                document.body.style.background = colors[m.data.type.split('-')];
+                document.body.style.background = colors[m.data.type.split('-')[1]];
             }
         });
 
         channel.subscribe('status', (m) => {
             if(m.data.type === 'join') {
-                const d = document.createElement('div'); d.className = 'sys-msg'; d.innerText = `[+] NODE: ${m.data.n} CONNECTED`;
+                const d = document.createElement('div'); d.className = 'sys-msg'; d.innerText = `[+] NODE: ${m.data.n} ULANDI`;
                 document.getElementById('chat-container').appendChild(d);
             }
         });
@@ -215,21 +223,30 @@
     async function send() {
         const input = document.getElementById('msg-in');
         if(!input.value) return;
-        const keyToUse = isGhost ? ghostKey : mKey;
+        
+        // Ghost mode yoqilgan bo'lsa maxfiy kalit ishlatiladi
+        let keyToUse = isGhost ? ghostKey : mKey;
         const encrypted = CryptoJS.AES.encrypt(input.value, keyToUse).toString();
-        channel.publish('msg', { sender: myNick, content: encrypted, av: activeAv, role: myRole, isG: isGhost });
+        
+        channel.publish('msg', { 
+            sender: myNick, 
+            content: encrypted, 
+            av: activeAv, 
+            role: myRole, 
+            isG: isGhost 
+        });
         input.value = "";
     }
 
     function toggleGhost() {
         isGhost = !isGhost;
-        document.getElementById('ghost-btn').innerText = isGhost ? "👻 GHOST MODE: ON" : "👻 GHOST MODE: OFF";
+        document.getElementById('ghost-btn').innerText = isGhost ? "👻 GHOST REJIMI: ON" : "👻 GHOST REJIMI: OFF";
         document.getElementById('ghost-status').style.display = isGhost ? "inline" : "none";
     }
 
     function sendAction(type) {
         channel.publish('system', { type: type });
-        if(type !== 'bg-0' && type !== 'bg-1' && type !== 'bg-2') toggleAdm();
+        if(!type.startsWith('bg-')) toggleAdm();
     }
 
     function toggleAdm() {
