@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WHOAMI SEC | C2 Hidden Node</title>
     <!-- KUTUBXONALAR -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://ably.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <style>
         :root { 
@@ -20,7 +20,6 @@
             display: flex; justify-content: center; align-items: center; overflow: hidden;
         }
 
-        /* SCANLINE EFFEKTI */
         body::after { 
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: repeating-linear-gradient(0deg, rgba(0,255,65,0.03) 0px, rgba(0,255,65,0.03) 1px, transparent 1px, transparent 2px); 
@@ -34,9 +33,11 @@
             box-shadow: 0 0 40px rgba(0, 255, 65, 0.1); position: relative; z-index: 100;
         }
 
-        /* ADMIN NEON EFFEKTI */
         @keyframes admin-blink { 0%, 100% { text-shadow: 0 0 20px var(--super); color: var(--super); } 50% { opacity: 0.4; } }
+        @keyframes helper-blink { 0%, 100% { text-shadow: 0 0 20px var(--sub); color: var(--sub); } 50% { opacity: 0.4; } }
+        
         .super-glow { animation: admin-blink 1s infinite !important; font-weight: bold; }
+        .helper-glow { animation: helper-blink 1s infinite !important; font-weight: bold; }
 
         h2 { text-align: center; letter-spacing: 8px; text-shadow: 0 0 10px var(--neon); margin: 0 0 15px 0; }
         
@@ -51,7 +52,6 @@
         .msg { margin: 12px 0; font-size: 0.85em; border-left: 1px solid var(--neon); padding-left: 10px; animation: slideIn 0.3s forwards; }
         @keyframes slideIn { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        /* ADMIN PANEL */
         #admin-panel { 
             display: none; position: absolute; top: 15%; left: 50%; transform: translateX(-50%); 
             background: #050505; border: 1px solid var(--super); padding: 20px; 
@@ -68,116 +68,142 @@
 <body>
 
 <div class="glass-panel">
-    <!-- LOGIN SCREEN -->
     <div id="login-scr" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
         <h2>[ WHOAMI SEC ]</h2>
-        <div class="av-box">
+        <div id="av-selector" class="av-box">
             <span class="av-opt active" onclick="setAv('👤', this)">👤</span>
             <span class="av-opt" onclick="setAv('🤖', this)">🤖</span>
             <span class="av-opt" onclick="setAv('🕶️', this)">🕶️</span>
+            <span class="av-opt" onclick="setAv('👽', this)">👽</span>
         </div>
         <input type="text" id="nick-in" placeholder="IDENTIFIKATOR (NIK)..." oninput="checkAdm(this.value)">
         <div id="pass-box" style="display:none;"><input type="password" id="pass-in" placeholder="MAXFIY KALIT..." style="border-color: var(--super);"></div>
         <button onclick="launch()">TIZIMNI YUKLASH</button>
     </div>
 
-    <!-- CHAT SCREEN -->
     <div id="chat-scr" style="display:none; flex-direction: column; height: 100%;">
         <div class="status-bar">
             <span>🟢 ONLAYN: <b id="online-count">0</b></span>
-            <span>SHIFRLASH: AES-256</span>
+            <span>E2EE: AES-256</span>
             <button id="adm-btn" style="display:none; width:auto; padding:2px 8px; border-color: var(--super); color: var(--super);" onclick="toggleAdm()">[CMD]</button>
         </div>
         <div id="chat-container"></div>
         <div style="display:flex; gap:8px;">
-            <input type="text" id="msg-in" style="flex-grow:1" placeholder="Maxfiy xabar...">
+            <input type="text" id="msg-in" style="flex-grow:1" placeholder="Xabarni shifrlash...">
             <button onclick="send()" style="width:50px">></button>
         </div>
     </div>
 
-    <!-- ADMIN PANEL -->
     <div id="admin-panel">
-        <h4 class="super-glow" style="text-align:center; margin-top:0;">ROOT_CONTROL</h4>
-        <button onclick="clearChat()" style="border-color: var(--super)">LOGLARNI TOZALASH</button>
-        <p style="font-size: 0.7em; margin: 15px 0 5px;">FONNI O'ZGARTIRISH:</p>
+        <h4 id="adm-title" class="super-glow" style="text-align:center; margin-top:0;">ROOT_CONTROL</h4>
+        <button onclick="sendAction('clear')" style="border-color: var(--super)">LOGLARNI TOZALASH</button>
+        <p style="font-size: 0.7em; margin: 15px 0 5px;">GLOBAL FON:</p>
         <div style="display:flex; gap:5px;">
-            <button onclick="changeBg('#000')" style="font-size: 8px;">QORA</button>
-            <button onclick="changeBg('radial-gradient(circle, #200000 0%, #000 100%)')" style="font-size: 8px;">QIZIL</button>
-            <button onclick="changeBg('radial-gradient(circle, #001a20 0%, #000 100%)')" style="font-size: 8px;">KO'K</button>
+            <button onclick="sendAction('bg-0')" style="font-size: 8px;">QORA</button>
+            <button onclick="sendAction('bg-1')" style="font-size: 8px;">QIZIL</button>
+            <button onclick="sendAction('bg-2')" style="font-size: 8px;">KO'K</button>
         </div>
         <button onclick="toggleAdm()" style="margin-top:10px; border-color:#555">BACK</button>
     </div>
 </div>
 
 <script>
-    // --- SUPABASE KONFIGURATSIYASI ---
-    const SB_URL = 'https://xeoanmfwbpbojnxlhpvt.supabase.co'; 
-    const SB_KEY = 'sb_publishable_ueDPj-bU63g5gKLQ-beUpg_AFyDZyYg'; 
-    const sb = supabase.createClient(SB_URL, SB_KEY);
+    const ABLY_KEY = '7k7eJQ.wlzQCA:mT1OA_HGf29bZrs8s_kMJ2K39lR6UgNr1aOGks7ttds';
+    const ably = new Ably.Realtime(ABLY_KEY);
+    const channel = ably.channels.get('whoami-v2-node');
+    
+    let activeAv = "👤", myRole = "user", myNick = "", mKey = "WHOAMI_XGAB_2026_SECURE_NODE";
 
-    let activeAv = "👤", myRole = "user", mKey = "WHOAMI_XGAB_2026_SECURE_NODE";
+    function setAv(av, el) { 
+        activeAv = av; 
+        document.querySelectorAll('.av-opt').forEach(x => x.classList.remove('active')); 
+        el.classList.add('active'); 
+    }
 
-    function setAv(av, el) { activeAv = av; document.querySelectorAll('.av-opt').forEach(x => x.classList.remove('active')); el.classList.add('active'); }
-    function checkAdm(v) { document.getElementById('pass-box').style.display = (v.toLowerCase() === "x-gab") ? "block" : "none"; }
+    function checkAdm(v) { 
+        const lowV = v.toLowerCase();
+        document.getElementById('pass-box').style.display = (lowV === "x-gab" || lowV === "helper") ? "block" : "none"; 
+    }
 
     async function launch() {
         const n = document.getElementById('nick-in').value, p = document.getElementById('pass-in').value;
         if(!n) return;
-        if(n.toLowerCase() === "x-gab" && p === "2011") { myRole = "super"; activeAv = "👑"; document.getElementById('adm-btn').style.display = "block"; }
+        myNick = n;
+
+        if(n.toLowerCase() === "x-gab" && p === "2011") { 
+            myRole = "super"; activeAv = "👑"; 
+            document.getElementById('adm-btn').style.display = "block";
+        } else if(n.toLowerCase() === "helper" && p === "2024") {
+            myRole = "helper"; activeAv = "🛡️";
+            document.getElementById('adm-btn').style.display = "block";
+            document.getElementById('adm-title').className = "helper-glow";
+            document.getElementById('adm-title').innerText = "HELPER_CONTROL";
+        }
         
         document.getElementById('login-scr').style.display = "none";
         document.getElementById('chat-scr').style.display = "flex";
-        
-        // REALTIME XABARLARNI ESHITISH
-        sb.channel('public:messages').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
-            const m = p.new;
-            try {
-                const dec = CryptoJS.AES.decrypt(m.content, mKey).toString(CryptoJS.enc.Utf8);
-                if(dec) printMsg(m.sender, dec, m.avatar);
-            } catch(e) { console.log("E2EE xatosi"); }
-        }).subscribe();
 
-        // ONLINE SANASH (PRESENCE)
-        const room = sb.channel('online_nodes');
-        room.on('presence', { event: 'sync' }, () => {
-            document.getElementById('online-count').innerText = Object.keys(room.presenceState()).length;
-        }).subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') await room.track({ u: n });
-        });
-        
-        // ESKI XABARLARNI YUKLASH
-        const { data } = await sb.from('messages').select('*').order('id', { ascending: false }).limit(30);
-        if(data) data.reverse().forEach(m => {
+        channel.subscribe('msg', (m) => {
             try {
-                const dec = CryptoJS.AES.decrypt(m.content, mKey).toString(CryptoJS.enc.Utf8);
-                if(dec) printMsg(m.sender, dec, m.avatar);
+                const dec = CryptoJS.AES.decrypt(m.data.content, mKey).toString(CryptoJS.enc.Utf8);
+                if(dec) printMsg(m.data.sender, dec, m.data.avatar, m.data.role);
             } catch(e) {}
         });
+
+        channel.subscribe('system', (m) => {
+            if(m.data.type === 'clear') { document.getElementById('chat-container').innerHTML = ""; }
+            if(m.data.type.startsWith('bg-')) {
+                const colors = ['#000', 'radial-gradient(circle, #200000 0%, #000 100%)', 'radial-gradient(circle, #001a20 0%, #000 100%)'];
+                document.body.style.background = colors[m.data.type.split('-')[1]];
+            }
+        });
+
+        channel.presence.subscribe('enter', updateOnline);
+        channel.presence.subscribe('leave', updateOnline);
+        await channel.presence.enter({ u: n });
+    }
+
+    function updateOnline() {
+        channel.presence.get((err, members) => {
+            document.getElementById('online-count').innerText = members ? members.length : 0;
+        });
+    }
+
+    function printMsg(user, text, av, role) {
+        const container = document.getElementById('chat-container');
+        const div = document.createElement('div');
+        div.className = 'msg';
+        let glow = "";
+        let prefix = "";
+        if(role === 'super') glow = "class='super-glow'";
+        if(role === 'helper') { glow = "class='helper-glow'"; prefix = "[HELPER] "; }
+        
+        div.innerHTML = `<span>${av}</span> <b ${glow}>${prefix}${user}:</b> <span>${text}</span>`;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
     }
 
     async function send() {
-        const i = document.getElementById('msg-in'), n = document.getElementById('nick-in').value;
-        if(i.value.trim()) {
-            const enc = CryptoJS.AES.encrypt(i.value.trim(), mKey).toString();
-            await sb.from('messages').insert([{ sender: n, content: enc, avatar: activeAv }]);
-            i.value = "";
-        }
+        const input = document.getElementById('msg-in');
+        if(!input.value) return;
+        const encrypted = CryptoJS.AES.encrypt(input.value, mKey).toString();
+        channel.publish('msg', { sender: myNick, content: encrypted, avatar: activeAv, role: myRole });
+        input.value = "";
     }
 
-    function printMsg(u, t, av) {
-        const c = document.getElementById('chat-container');
-        const d = document.createElement('div');
-        d.className = 'msg';
-        let cls = (u.toLowerCase() === 'x-gab') ? "super-glow" : "";
-        d.innerHTML = `<span>${av}</span> <div><b class="${cls}">${u.toLowerCase() === 'x-gab' ? 'ADMIN ' + u : u}:</b><br><span>${t}</span></div>`;
-        c.appendChild(d);
-        c.scrollTop = c.scrollHeight;
+    function sendAction(type) {
+        channel.publish('system', { type: type });
+        if(type === 'clear') toggleAdm();
     }
 
-    function toggleAdm() { const p = document.getElementById('admin-panel'); p.style.display = (p.style.display === "block") ? "none" : "block"; }
-    function changeBg(b) { document.body.style.setProperty('--bg', b); toggleAdm(); }
-    async function clearChat() { if(confirm("Barcha loglar o'chirilsinmi?")) { await sb.from('messages').delete().neq('id', 0); location.reload(); } }
-    document.getElementById('msg-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
+    function toggleAdm() {
+        const p = document.getElementById('admin-panel');
+        p.style.display = (p.style.display === "block") ? "none" : "block";
+    }
+
+    function changeBg(c) { document.body.style.background = c; }
+
+    document.getElementById('msg-in').addEventListener("keypress", (e) => { if(e.key === "Enter") send(); });
 </script>
 </body>
 </html>
