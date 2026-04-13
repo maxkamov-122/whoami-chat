@@ -1,259 +1,717 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WHOAMI SEC | C2 Hidden Node V16</title>
-    <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-    <style>
-        :root { 
-            --neon: #00ff41; --super: #ff003c; --sub: #00d4ff; 
-            --bg: radial-gradient(circle, #0f0f0f 0%, #000 100%);
-        }
-        * { box-sizing: border-box; cursor: crosshair; transition: 0.3s; font-family: 'Courier New', monospace; }
-        
-        body { 
-            background: var(--bg); color: var(--neon); 
-            height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; overflow: hidden;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>WHOAMI SEC</title>
+<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
 
-        /* NEON FONLAR */
-        .neon-bg-red { background: radial-gradient(circle, #2a0000 0%, #000 100%) !important; animation: pulse 1.5s infinite; }
-        .neon-bg-blue { background: radial-gradient(circle, #000a2a 0%, #000 100%) !important; animation: pulse 1.5s infinite; }
-        .neon-bg-green { background: radial-gradient(circle, #001a00 0%, #000 100%) !important; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 0.9; } 50% { opacity: 1; } }
+body{
+  background: linear-gradient(135deg,#0d0d1a 0%,#0a1628 40%,#0d0d1a 100%);
+  color:#e2e8f0;
+  display:flex;flex-direction:column;height:100vh;
+}
+body::before{
+  content:'';position:fixed;top:0;left:0;right:0;bottom:0;
+  background: radial-gradient(ellipse at 20% 20%,rgba(99,102,241,.12) 0%,transparent 50%),
+              radial-gradient(ellipse at 80% 80%,rgba(139,92,246,.10) 0%,transparent 50%),
+              radial-gradient(ellipse at 50% 50%,rgba(59,130,246,.06) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
 
-        body::after { 
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: repeating-linear-gradient(0deg, rgba(0,255,65,0.02) 0px, rgba(0,255,65,0.02) 1px, transparent 1px, transparent 2px); 
-            pointer-events: none; z-index: 50; 
-        }
+.glass{
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(20px) saturate(1.5);
+  -webkit-backdrop-filter:blur(20px) saturate(1.5);
+  border:1px solid rgba(255,255,255,.12);
+}
+.glass-dark{
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,.08);
+}
 
-        .glass-panel {
-            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 12px;
-            width: 95%; max-width: 600px; height: 92vh; display: flex; flex-direction: column; padding: 25px;
-            box-shadow: 0 0 40px rgba(0, 255, 65, 0.1); position: relative; z-index: 100;
-        }
+/* SCREENS */
+.screen{display:none;position:fixed;inset:0;z-index:100;justify-content:center;align-items:center;padding:16px}
+.screen.active{display:flex}
 
-        /* ANIMATSIYALAR */
-        @keyframes admin-blink { 0%, 100% { text-shadow: 0 0 20px var(--super); color: var(--super); } 50% { opacity: 0.5; } }
-        @keyframes helper-blink { 0%, 100% { text-shadow: 0 0 20px var(--sub); color: var(--sub); } 50% { opacity: 0.5; } }
-        
-        .admin-txt { animation: admin-blink 1.2s infinite; font-weight: bold; font-size: 1.1em; }
-        .helper-txt { animation: helper-blink 1.2s infinite; font-weight: bold; }
+/* LOGIN */
+#login-screen{background:linear-gradient(135deg,#0d0d1a,#0a1628)}
+.login-card{
+  width:100%;max-width:420px;padding:36px 32px;border-radius:24px;position:relative;z-index:1;
+  background:rgba(255,255,255,.07);
+  backdrop-filter:blur(30px);
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05);
+}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo h1{font-size:26px;font-weight:700;letter-spacing:3px;color:#fff;text-shadow:0 0 30px rgba(139,92,246,.6)}
+.login-logo p{font-size:12px;color:rgba(255,255,255,.4);letter-spacing:4px;margin-top:4px}
 
-        input, button { 
-            background: rgba(0, 0, 0, 0.8); border: 1px solid var(--neon); 
-            color: var(--neon); padding: 14px; margin: 8px 0; border-radius: 8px; outline: none; width: 100%;
-        }
-        button { cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
-        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 25px var(--neon); }
+.avatar-picker{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:20px}
+.av-opt{
+  width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:20px;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid transparent;transition:all .2s;
+  background:rgba(255,255,255,.1);
+}
+.av-opt:hover{transform:scale(1.15);border-color:rgba(255,255,255,.4)}
+.av-opt.selected{border-color:#a78bfa;box-shadow:0 0 12px rgba(167,139,250,.5);transform:scale(1.1)}
 
-        #chat-container { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; scroll-behavior: smooth; border-bottom: 1px solid #111; }
-        .msg { margin: 12px 0; font-size: 0.9em; border-left: 2px solid var(--neon); padding-left: 12px; animation: slideIn 0.3s; line-height: 1.4; }
-        .sys-msg { font-size: 0.75em; color: #666; text-align: center; margin: 10px 0; border-top: 1px solid #222; padding-top: 5px; }
-        
-        @keyframes slideIn { from { transform: translateX(-15px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.input-group{position:relative;margin-bottom:12px}
+.input-group input{
+  width:100%;padding:13px 16px;border-radius:12px;outline:none;font-size:14px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;
+  transition:all .2s;
+}
+.input-group input::placeholder{color:rgba(255,255,255,.3)}
+.input-group input:focus{background:rgba(255,255,255,.12);border-color:rgba(167,139,250,.6);box-shadow:0 0 0 3px rgba(167,139,250,.15)}
+.input-group .lock-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);opacity:.4;font-size:14px;pointer-events:none}
 
-        .modal-panel { 
-            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: #050505; border: 2px solid var(--super); padding: 25px; 
-            z-index: 500; width: 340px; box-shadow: 0 0 50px #000; border-radius: 15px; text-align: center;
-        }
+#pass-hint{font-size:11px;color:rgba(255,255,255,.3);margin:-6px 0 10px 4px;display:none}
 
-        #warn-screen { 
-            display: flex; position: fixed; top:0; left:0; width:100%; height:100%; 
-            background: #000; color: var(--super); z-index: 2000; 
-            flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px;
-        }
-    </style>
+.btn-login{
+  width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;font-size:15px;font-weight:600;letter-spacing:1px;
+  background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;margin-top:4px;
+  transition:all .2s;box-shadow:0 4px 20px rgba(124,58,237,.4);
+}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(124,58,237,.5)}
+.btn-login:active{transform:translateY(0)}
+.login-err{color:#f87171;font-size:12px;text-align:center;margin-top:8px;min-height:18px}
+
+/* MAIN APP */
+#app{display:none;flex-direction:column;height:100vh;position:relative;z-index:1}
+#app.active{display:flex}
+
+/* TOPBAR */
+.topbar{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;flex-shrink:0;
+  background:rgba(0,0,0,.4);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.08);
+}
+.topbar-logo{font-size:15px;font-weight:700;letter-spacing:2px;color:#fff;flex-shrink:0}
+.online-pill{
+  display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:12px;
+  background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#4ade80;
+}
+.online-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.topbar-actions{margin-left:auto;display:flex;gap:6px;align-items:center}
+.tb-btn{
+  padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;border:none;
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);transition:all .2s;font-weight:500;
+}
+.tb-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+.tb-btn.admin{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.tb-btn.admin:hover{background:rgba(239,68,68,.25)}
+.tb-btn.helper{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
+.tb-btn.helper:hover{background:rgba(59,130,246,.25)}
+
+/* LAYOUT */
+.main-layout{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{
+  width:240px;flex-shrink:0;display:flex;flex-direction:column;
+  background:rgba(0,0,0,.3);border-right:1px solid rgba(255,255,255,.07);
+  transition:transform .3s;overflow:hidden;
+}
+#sidebar.hidden{display:none}
+.sidebar-section{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sidebar-title{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:8px}
+.user-item{
+  display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;margin-bottom:3px;
+  cursor:pointer;transition:background .15s;
+}
+.user-item:hover{background:rgba(255,255,255,.07)}
+.user-item.clickable-dm:hover .user-nick{color:#a78bfa}
+.user-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:rgba(255,255,255,.1)}
+.user-nick{font-size:13px;font-weight:500;color:#e2e8f0}
+.user-role-tag{font-size:10px;padding:1px 6px;border-radius:4px;margin-left:auto;flex-shrink:0}
+.role-admin{background:rgba(239,68,68,.2);color:#f87171}
+.role-helper{background:rgba(59,130,246,.2);color:#60a5fa}
+.role-user{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4)}
+
+.sidebar-btn{
+  display:block;width:100%;padding:8px 10px;border-radius:10px;border:none;cursor:pointer;
+  font-size:12px;text-align:left;margin-bottom:4px;transition:all .15s;background:transparent;color:rgba(255,255,255,.6);
+}
+.sidebar-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.sidebar-btn.red:hover{background:rgba(239,68,68,.15);color:#f87171}
+.sidebar-btn.blue:hover{background:rgba(59,130,246,.15);color:#60a5fa}
+.sidebar-btn span{font-size:14px;margin-right:6px}
+
+/* CHAT AREA */
+.chat-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+/* DM OVERLAY */
+#dm-overlay{
+  display:none;position:absolute;inset:0;z-index:50;flex-direction:column;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
+}
+#dm-overlay.active{display:flex}
+.dm-topbar{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.08);
+}
+.dm-topbar h3{font-size:14px;font-weight:600;color:#fff}
+.dm-close-btn{
+  margin-left:auto;padding:4px 10px;border-radius:8px;border:none;cursor:pointer;
+  background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);font-size:12px;
+}
+
+#msgs{flex:1;overflow-y:auto;padding:12px 14px;scroll-behavior:smooth}
+#msgs::-webkit-scrollbar{width:4px}
+#msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+
+.msg{display:flex;gap:10px;margin-bottom:14px;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg-av{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,.1);margin-top:2px}
+.msg-body{flex:1;min-width:0}
+.msg-header{display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap}
+.msg-nick{font-size:13px;font-weight:600}
+.nick-admin{color:#f87171}
+.nick-helper{color:#60a5fa}
+.nick-user{color:#a78bfa}
+.msg-role-badge{font-size:10px;padding:1px 6px;border-radius:4px}
+.badge-admin{background:rgba(239,68,68,.2);color:#f87171}
+.badge-helper{background:rgba(59,130,246,.2);color:#60a5fa}
+.msg-time{font-size:11px;color:rgba(255,255,255,.25);margin-left:auto}
+.msg-text{
+  font-size:14px;line-height:1.55;color:rgba(255,255,255,.85);word-break:break-word;
+  background:rgba(255,255,255,.05);padding:8px 12px;border-radius:0 12px 12px 12px;
+  border:1px solid rgba(255,255,255,.08);display:inline-block;max-width:100%;
+}
+.msg.own{flex-direction:row-reverse}
+.msg.own .msg-header{flex-direction:row-reverse}
+.msg.own .msg-time{margin-left:0;margin-right:auto}
+.msg.own .msg-text{
+  background:rgba(124,58,237,.2);border-color:rgba(124,58,237,.3);border-radius:12px 0 12px 12px;
+}
+.msg.own .msg-role-badge{display:none}
+
+.sys-log{
+  text-align:center;font-size:11px;color:rgba(255,255,255,.25);margin:6px 0;padding:4px 0;
+  border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05);
+}
+.sys-log.join{color:rgba(74,222,128,.4)}
+.sys-log.leave{color:rgba(248,113,113,.35)}
+.sys-log.warn{color:rgba(251,191,36,.45)}
+
+#typing-bar{font-size:11px;color:rgba(255,255,255,.3);padding:2px 14px;min-height:18px;flex-shrink:0}
+
+/* INPUT */
+.input-area{
+  display:flex;align-items:flex-end;gap:8px;padding:10px 12px;flex-shrink:0;
+  background:rgba(0,0,0,.35);border-top:1px solid rgba(255,255,255,.07);
+}
+#msg-input{
+  flex:1;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);outline:none;
+  background:rgba(255,255,255,.08);color:#fff;font-size:14px;resize:none;min-height:42px;max-height:100px;
+  font-family:inherit;line-height:1.4;
+}
+#msg-input::placeholder{color:rgba(255,255,255,.25)}
+#msg-input:focus{border-color:rgba(167,139,250,.5);background:rgba(255,255,255,.1)}
+.send-btn{
+  width:42px;height:42px;border-radius:12px;border:none;cursor:pointer;flex-shrink:0;
+  background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;font-size:18px;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.send-btn:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(124,58,237,.5)}
+.send-btn:active{transform:scale(.95)}
+
+/* ADMIN MODAL */
+#admin-modal{
+  display:none;position:fixed;inset:0;z-index:200;justify-content:center;align-items:flex-end;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(6px);
+}
+#admin-modal.active{display:flex}
+.modal-sheet{
+  width:100%;max-width:520px;padding:20px;border-radius:24px 24px 0 0;
+  background:rgba(15,15,25,.95);border:1px solid rgba(255,255,255,.12);border-bottom:none;
+  max-height:80vh;overflow-y:auto;
+}
+.modal-title{font-size:14px;font-weight:700;letter-spacing:2px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.modal-title.red{color:#f87171}
+.modal-title.blue{color:#60a5fa}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.m-btn{
+  padding:11px 10px;border-radius:12px;border:none;cursor:pointer;font-size:12px;font-weight:600;
+  letter-spacing:.5px;transition:all .2s;text-align:center;
+}
+.m-btn-default{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
+.m-btn-default:hover{background:rgba(255,255,255,.15);color:#fff}
+.m-btn-red{background:rgba(239,68,68,.15);color:#f87171}
+.m-btn-red:hover{background:rgba(239,68,68,.25)}
+.m-btn-blue{background:rgba(59,130,246,.15);color:#60a5fa}
+.m-btn-blue:hover{background:rgba(59,130,246,.25)}
+.m-btn-green{background:rgba(34,197,94,.15);color:#4ade80}
+.m-btn-green:hover{background:rgba(34,197,94,.25)}
+.m-btn-full{grid-column:1/-1}
+.modal-close{width:100%;padding:11px;border-radius:12px;border:none;cursor:pointer;background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-size:13px;margin-top:4px}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(20,20,35,.95);border:1px solid rgba(255,255,255,.15);
+  padding:10px 18px;border-radius:12px;font-size:13px;color:#fff;
+  opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:999;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ANNOUNCE BANNER */
+#announce-bar{
+  display:none;padding:8px 14px;font-size:12px;text-align:center;
+  background:rgba(251,191,36,.1);border-bottom:1px solid rgba(251,191,36,.2);color:#fbbf24;
+}
+#announce-bar.active{display:block}
+
+/* MOBILE */
+@media(max-width:600px){
+  #sidebar{position:fixed;left:0;top:0;bottom:0;z-index:80;width:220px;transform:translateX(-100%)}
+  #sidebar.mobile-open{transform:translateX(0)}
+  .login-card{padding:24px 20px}
+  .modal-grid{grid-template-columns:1fr}
+  .topbar-logo{font-size:13px}
+}
+</style>
 </head>
-<body id="main-body">
+<body>
 
-<!-- KIRISH OGOHLANTIRISHI -->
-<div id="warn-screen">
-    <h1 style="font-size: 2.5em; text-shadow: 0 0 15px var(--super);">[ XAVFSIZLIK TIZIMI ]</h1>
-    <p style="border: 1px solid var(--super); padding: 20px; max-width: 500px; line-height: 1.6;">
-        DIQQAT: USHBU CHAT TO'LIQ SHIFRLANGAN VA MAXFIYDIR. 
-        ODDIY FOYDALANUVCHILAR VA BEGONALAR KIRISHI QAT'IYAN TAQIQLANADI!
-        TIZIMGA KIRISH BILAN BARCHA QOIDALARGA ROZILIK BILDIRASIZ.
-    </p>
-    <button onclick="confirmWarn()" style="width: 250px; border-color: var(--super); color: var(--super);">TASDIQLAYMAN</button>
+<!-- LOGIN -->
+<div id="login-screen" class="screen active">
+<div class="login-card">
+  <div class="login-logo">
+    <h1>WHOAMI</h1>
+    <p>SECURE CHANNEL</p>
+  </div>
+
+  <p style="font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-bottom:12px;letter-spacing:1px">AVATAR TANLANG</p>
+  <div class="avatar-picker" id="av-picker">
+    <div class="av-opt selected" data-av="🦊" onclick="selectAv(this)">🦊</div>
+    <div class="av-opt" data-av="🐺" onclick="selectAv(this)">🐺</div>
+    <div class="av-opt" data-av="🦅" onclick="selectAv(this)">🦅</div>
+    <div class="av-opt" data-av="🐉" onclick="selectAv(this)">🐉</div>
+    <div class="av-opt" data-av="🤖" onclick="selectAv(this)">🤖</div>
+    <div class="av-opt" data-av="👾" onclick="selectAv(this)">👾</div>
+    <div class="av-opt" data-av="🎭" onclick="selectAv(this)">🎭</div>
+    <div class="av-opt" data-av="🔮" onclick="selectAv(this)">🔮</div>
+  </div>
+
+  <div class="input-group" style="margin-top:8px">
+    <input type="text" id="nick-in" placeholder="Taxallus (nik) kiriting..." maxlength="20" oninput="onNickInput(this.value)" autocomplete="off">
+  </div>
+  <p id="pass-hint">Parol kiriting (maxsus rol uchun)</p>
+  <div class="input-group" id="pass-box" style="display:none">
+    <input type="password" id="pass-in" placeholder="Maxfiy kalit..." maxlength="50">
+    <span class="lock-icon">🔒</span>
+  </div>
+  <button class="btn-login" onclick="doLogin()">KIRISH</button>
+  <p class="login-err" id="login-err"></p>
+</div>
 </div>
 
-<div class="glass-panel">
-    <!-- LOGIN SCREEN -->
-    <div id="login-scr" style="display: none; flex-direction: column; justify-content: center; height: 100%;">
-        <h2 style="text-align:center; letter-spacing: 5px;">[ WHOAMI SEC ]</h2>
-        <input type="text" id="nick-in" placeholder="IDENTIFIKATOR (NIK)..." oninput="checkRole(this.value)">
-        <div id="pass-box" style="display:none;"><input type="password" id="pass-in" placeholder="MAXFIY KALIT..."></div>
-        <button onclick="launch()">TIZIMNI YUKLASH</button>
+<!-- APP -->
+<div id="app">
+  <!-- ANNOUNCE -->
+  <div id="announce-bar" id="announce-bar"></div>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-logo">WHOAMI SEC</div>
+    <div class="online-pill"><div class="online-dot"></div><span id="online-count">0</span> onlayn</div>
+    <div class="topbar-actions">
+      <button class="tb-btn" id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+      <button class="tb-btn admin" id="adm-btn" style="display:none" onclick="openModal('admin-modal')">⚙ Admin</button>
+      <button class="tb-btn helper" id="hlp-btn" style="display:none" onclick="openModal('helper-modal')">🛡 Helper</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Onlayn foydalanuvchilar</div>
+        <div id="users-list"></div>
+      </div>
+      <div class="sidebar-section" style="flex:1;overflow-y:auto">
+        <div class="sidebar-title">Amallar</div>
+        <button class="sidebar-btn" onclick="toggleStealth()"><span>🎭</span>Niqob: <span id="stealth-lbl">off</span></button>
+        <button class="sidebar-btn" onclick="exportChat()"><span>💾</span>Chat eksport</button>
+        <button class="sidebar-btn blue" onclick="clearMine()"><span>🗑</span>O'z xabarlarimni o'chir</button>
+      </div>
     </div>
 
-    <!-- CHAT SCREEN -->
-    <div id="chat-scr" style="display:none; flex-direction: column; height: 100%;">
-        <div style="display:flex; justify-content:space-between; font-size:0.75em; margin-bottom: 10px; border-bottom: 1px solid #222; padding-bottom: 5px;">
-            <span>STATUS: <b id="online-count">0</b> ONLAYN</span>
-            <div>
-                <button id="adm-btn" style="display:none; width:auto; padding:2px 10px; font-size:10px; border-color: var(--super);" onclick="togglePanel('admin-panel')">BOSHQARUV</button>
-                <button id="hlp-btn" style="display:none; width:auto; padding:2px 10px; font-size:10px; border-color: var(--sub);" onclick="togglePanel('helper-panel')">YORDAMCHI</button>
-            </div>
+    <!-- CHAT -->
+    <div class="chat-wrap">
+      <!-- DM OVERLAY -->
+      <div id="dm-overlay">
+        <div class="dm-topbar">
+          <div id="dm-av" style="font-size:22px"></div>
+          <h3 id="dm-title">Shaxsiy chat</h3>
+          <button class="dm-close-btn" onclick="closeDm()">✕ Yopish</button>
         </div>
-        <div id="chat-container"></div>
-        <div style="display:flex; gap:8px;">
-            <input type="text" id="msg-in" placeholder="Xabarni kiriting (Enter)..." style="flex-grow:1">
-            <button onclick="send()" style="width:60px">></button>
+        <div id="dm-msgs" style="flex:1;overflow-y:auto;padding:12px 14px"></div>
+        <div class="input-area">
+          <textarea id="dm-input" placeholder="Shaxsiy xabar..." rows="1" style="flex:1;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:#fff;font-size:14px;resize:none;min-height:42px;outline:none;font-family:inherit"></textarea>
+          <button class="send-btn" onclick="sendDm()">➤</button>
         </div>
-    </div>
+      </div>
 
-    <!-- ADMIN PANEL -->
-    <div id="admin-panel" class="modal-panel">
-        <h3 class="admin-txt">ROOT_CONTROL_V16</h3>
-        <button onclick="sendAction('clear')">LOGLARNI TOZALASH</button>
-        <button onclick="sendAction('havf-shifr')" style="border-color: var(--sub)">🔐 HAVF: SHIFRLASH</button>
-        <button onclick="sendAction('havf-exit')" style="background:var(--super); color:white;">💀 HAVF: CHATNI YOPISH</button>
-        <button onclick="toggleStealth()">NIQOBLANISH: ON/OFF</button>
-        <div style="display:flex; gap:5px; margin-top:10px;">
-            <button onclick="changeTheme('red')" style="font-size:9px;">QIZIL FON</button>
-            <button onclick="changeTheme('blue')" style="font-size:9px;">KO'K FON</button>
-            <button onclick="changeTheme('green')" style="font-size:9px;">YASHIL FON</button>
-        </div>
-        <button onclick="togglePanel('admin-panel')" style="margin-top:15px; border-color:#555">YOPISH</button>
+      <div id="msgs"></div>
+      <div id="typing-bar"></div>
+      <div class="input-area">
+        <textarea id="msg-input" placeholder="Xabar yozing... (Enter - yuborish)" rows="1" oninput="onInput(this)"></textarea>
+        <button class="send-btn" onclick="sendMsg()">➤</button>
+      </div>
     </div>
-
-    <!-- HELPER PANEL -->
-    <div id="helper-panel" class="modal-panel" style="border-color: var(--sub);">
-        <h3 class="helper-txt">HELPER_TOOLS</h3>
-        <button onclick="sendAction('clear')">CHATNI TOZALASH</button>
-        <div style="display:flex; gap:5px; margin-top:10px;">
-            <button onclick="changeTheme('red')" style="font-size:9px;">QIZIL</button>
-            <button onclick="changeTheme('blue')" style="font-size:9px;">KO'K</button>
-        </div>
-        <button onclick="togglePanel('helper-panel')" style="margin-top:15px; border-color:#555">YOPISH</button>
-    </div>
+  </div>
 </div>
+
+<!-- ADMIN MODAL -->
+<div id="admin-modal" onclick="closeModalBg(event,'admin-modal')">
+<div class="modal-sheet" onclick="event.stopPropagation()">
+  <div class="modal-title red">⚙ Admin Boshqaruvi</div>
+  <div class="modal-grid">
+    <button class="m-btn m-btn-default" onclick="sendSys('clear')">🗑 Log tozalash</button>
+    <button class="m-btn m-btn-default" onclick="toggleLock()">🔒 Chat lock</button>
+    <button class="m-btn m-btn-blue" onclick="showAnnounceInput()">📢 E'lon joylash</button>
+    <button class="m-btn m-btn-green" onclick="sendSys('unlock')">✅ Lockni ochish</button>
+    <button class="m-btn m-btn-default" onclick="changeTheme('purple')">🟣 Binafsha tema</button>
+    <button class="m-btn m-btn-default" onclick="changeTheme('teal')">🟢 Yashil tema</button>
+    <button class="m-btn m-btn-default" onclick="changeTheme('rose')">🔴 Qizil tema</button>
+    <button class="m-btn m-btn-default" onclick="changeTheme('default')">⚫ Standart tema</button>
+    <button class="m-btn m-btn-red m-btn-full" onclick="confirmKick()">⚡ Emergency Exit (Barchani chiqarish)</button>
+  </div>
+  <button class="modal-close" onclick="closeModal('admin-modal')">Yopish</button>
+</div>
+</div>
+
+<!-- HELPER MODAL -->
+<div id="helper-modal" onclick="closeModalBg(event,'helper-modal')">
+<div class="modal-sheet" onclick="event.stopPropagation()">
+  <div class="modal-title blue">🛡 Helper Vositalari</div>
+  <div class="modal-grid">
+    <button class="m-btn m-btn-default" onclick="sendSys('clear')">🗑 Log tozalash</button>
+    <button class="m-btn m-btn-blue" onclick="changeTheme('teal')">🟢 Yashil tema</button>
+    <button class="m-btn m-btn-blue" onclick="changeTheme('default')">⚫ Standart tema</button>
+    <button class="m-btn m-btn-default" onclick="exportChat()">💾 Eksport</button>
+  </div>
+  <button class="modal-close" onclick="closeModal('helper-modal')">Yopish</button>
+</div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
 
 <script>
-    const ABLY_KEY = '7k7eJQ.wlzQCA:mT1OA_HGf29bZrs8s_kMJ2K39lR6UgNr1aOGks7ttds';
-    const ably = new Ably.Realtime(ABLY_KEY);
-    const channel = ably.channels.get('whoami-v16-core');
+const ABLY_KEY = '7k7eJQ.wlzQCA:mT1OA_HGf29bZrs8s_kMJ2K39lR6UgNr1aOGks7ttds';
+const ENC_KEY = 'WHOAMI_SEC_2026';
 
-    let myNick = "", myRole = "user", isStealth = false;
-    let shifrMode = false;
-    const cKey = "AES_SECRET_2026_WHOAMI";
+const ADMINS = [{nick:'x-gab', pass:'6969'}];
+const HELPERS = [{nick:'helper', pass:'6996'}];
 
-    function confirmWarn() {
-        document.getElementById('warn-screen').style.display = 'none';
-        document.getElementById('login-scr').style.display = 'flex';
+let myNick='', myRole='user', myAv='🦊';
+let isStealth=false, chatLocked=false;
+let typingTimer=null, isTyping=false;
+let msgHistory=[];
+let dmTarget=null, dmHistory=[];
+let presenceList=[];
+
+const ably = new Ably.Realtime(ABLY_KEY);
+const ch = ably.channels.get('whoami-sec-v3-main');
+const sysCh = ably.channels.get('whoami-sec-v3-sys');
+const dmCh = ably.channels.get('whoami-sec-v3-dm');
+const presCh = ably.channels.get('whoami-sec-v3-presence');
+
+function enc(t){return CryptoJS.AES.encrypt(t,ENC_KEY).toString()}
+function dec(c){try{const b=CryptoJS.AES.decrypt(c,ENC_KEY);return b.toString(CryptoJS.enc.Utf8)||null}catch{return null}}
+
+function selectAv(el){
+  document.querySelectorAll('.av-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  myAv = el.dataset.av;
+}
+
+function onNickInput(v){
+  const vl=v.toLowerCase();
+  const isSpecial = ADMINS.some(a=>a.nick===vl)||HELPERS.some(h=>h.nick===vl);
+  document.getElementById('pass-box').style.display=isSpecial?'block':'none';
+  document.getElementById('pass-hint').style.display=isSpecial?'block':'none';
+}
+
+function doLogin(){
+  const nick=document.getElementById('nick-in').value.trim();
+  const pass=document.getElementById('pass-in').value;
+  const err=document.getElementById('login-err');
+  if(!nick){err.textContent='Taxallus kiriting!';return}
+  if(nick.length<2){err.textContent='Kamida 2 harf!';return}
+
+  const vl=nick.toLowerCase();
+  myRole='user';
+
+  const adminMatch=ADMINS.find(a=>a.nick===vl);
+  const helperMatch=HELPERS.find(h=>h.nick===vl);
+
+  if(adminMatch){
+    if(pass!==adminMatch.pass){err.textContent='Noto\'g\'ri parol!';return}
+    myRole='admin';
+  } else if(helperMatch){
+    if(pass!==helperMatch.pass){err.textContent='Noto\'g\'ri parol!';return}
+    myRole='helper';
+  }
+
+  myNick=nick;
+  err.textContent='';
+  startApp();
+}
+
+function startApp(){
+  document.getElementById('login-screen').classList.remove('active');
+  document.getElementById('app').classList.add('active');
+
+  if(myRole==='admin'){document.getElementById('adm-btn').style.display='block'}
+  if(myRole==='helper'){document.getElementById('hlp-btn').style.display='block'}
+
+  ch.subscribe('msg', m=>renderMsg(m.data));
+  sysCh.subscribe('sys', m=>handleSys(m.data));
+  dmCh.subscribe('dm', m=>handleDm(m.data));
+  ch.subscribe('typing', m=>handleTyping(m.data));
+
+  presCh.presence.enter({nick:myNick,role:myRole,av:myAv});
+  presCh.presence.subscribe(()=>updatePresence());
+  updatePresence();
+
+  if(myRole!=='admin'){
+    sysCh.publish('sys',{type:'join',nick:myNick,role:myRole,av:myAv});
+  }
+
+  addSysLog(`Xush kelibsiz, ${myNick}! AES-256 shifrlash faol.`,'warn');
+  document.getElementById('msg-input').focus();
+}
+
+function renderMsg(d){
+  if(!d||!d.nick) return;
+  const box=document.getElementById('msgs');
+  const t=dec(d.text);
+  if(t===null) return;
+  const isOwn=d.nick===myNick&&!isStealth;
+  const roleClass=d.role==='admin'?'nick-admin':d.role==='helper'?'nick-helper':'nick-user';
+  const badge=d.role==='admin'?'<span class="msg-role-badge badge-admin">ADMIN</span>':d.role==='helper'?'<span class="msg-role-badge badge-helper">HELPER</span>':'';
+  const time=new Date(d.ts).toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
+  const div=document.createElement('div');
+  div.className='msg'+(isOwn?' own':'');
+  div.innerHTML=`<div class="msg-av">${d.av||'👤'}</div><div class="msg-body"><div class="msg-header"><span class="msg-nick ${roleClass}">${esc(d.nick)}</span>${badge}<span class="msg-time">${time}</span></div><div class="msg-text">${esc(t)}</div></div>`;
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+  msgHistory.push({nick:d.nick,role:d.role,text:t,time});
+}
+
+function sendMsg(){
+  const inp=document.getElementById('msg-input');
+  const text=inp.value.trim();
+  if(!text) return;
+  if(chatLocked&&myRole!=='admin'){toast('Chat hozir bloklangan!');return}
+  const displayNick=isStealth?'anon_'+Math.random().toString(36).slice(2,6):myNick;
+  const displayRole=isStealth?'user':myRole;
+  const displayAv=isStealth?'🎭':myAv;
+  ch.publish('msg',{nick:displayNick,av:displayAv,role:displayRole,text:enc(text),ts:Date.now()});
+  inp.value='';inp.style.height='';
+  stopTyping();
+}
+
+function handleSys(d){
+  if(!d) return;
+  if(d.type==='join'){
+    addSysLog(`${d.av||'👤'} ${d.nick} [${d.role}] tizimga kirdi`,'join');
+  } else if(d.type==='leave'){
+    addSysLog(`${d.nick} tizimdan chiqdi`,'leave');
+  } else if(d.type==='clear'){
+    document.getElementById('msgs').innerHTML='';
+    addSysLog('Chat tozalandi','warn');
+  } else if(d.type==='lock'){
+    chatLocked=true;addSysLog('Chat bloklandi — faqat admin yoza oladi','warn');
+  } else if(d.type==='unlock'){
+    chatLocked=false;addSysLog('Chat bloki olib tashlandi','join');
+  } else if(d.type==='theme'){
+    applyTheme(d.color);
+  } else if(d.type==='announce'){
+    const bar=document.getElementById('announce-bar');
+    bar.textContent='📢 '+d.text;bar.className='active';
+    setTimeout(()=>bar.className='',8000);
+  } else if(d.type==='kick'){
+    if(myRole!=='admin'){
+      document.body.innerHTML=`<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#0d0d1a;color:#f87171;text-align:center;gap:20px;font-family:system-ui"><div style="font-size:28px">🚨</div><h2 style="letter-spacing:2px">CHAT YOPILDI</h2><p style="color:rgba(255,255,255,.4);font-size:14px">Admin tomonidan chiqarilgansiz.<br>5 soniyadan keyin qayta yuklanadi.</p></div>`;
+      setTimeout(()=>location.reload(),5000);
     }
+  }
+}
 
-    function checkRole(v) {
-        const l = v.toLowerCase();
-        document.getElementById('pass-box').style.display = (l === "x-gab" || l === "helper") ? "block" : "none";
+function handleDm(d){
+  if(!d) return;
+  if(d.to===myNick||d.from===myNick){
+    const t=dec(d.text);
+    if(!t) return;
+    dmHistory.push(d);
+    if(dmTarget&&(d.from===dmTarget||d.to===dmTarget)){
+      renderDmMsg(d,t);
+    } else if(d.from!==myNick){
+      toast(`📩 ${d.from}: ${t.slice(0,30)}`);
     }
+  }
+}
 
-    function launch() {
-        myNick = document.getElementById('nick-in').value.trim();
-        const p = document.getElementById('pass-in').value;
-        if(!myNick) return alert("Nikni kiriting!");
+function openDm(targetNick,targetAv){
+  if(targetNick===myNick) return;
+  dmTarget=targetNick;
+  document.getElementById('dm-title').textContent=targetAv+' '+targetNick+' bilan shaxsiy chat';
+  document.getElementById('dm-av').textContent=targetAv;
+  document.getElementById('dm-msgs').innerHTML='';
+  dmHistory.filter(d=>(d.from===targetNick&&d.to===myNick)||(d.from===myNick&&d.to===targetNick))
+    .forEach(d=>renderDmMsg(d,dec(d.text)));
+  document.getElementById('dm-overlay').classList.add('active');
+  document.getElementById('dm-input').focus();
+}
 
-        if(myNick.toLowerCase() === "x-gab" && p === "6969") { 
-            myRole = "admin"; document.getElementById('adm-btn').style.display = 'block'; 
-        } else if(myNick.toLowerCase() === "helper" && p === "6996") { 
-            myRole = "helper"; document.getElementById('hlp-btn').style.display = 'block'; 
-        }
+function renderDmMsg(d,t){
+  if(!t) return;
+  const box=document.getElementById('dm-msgs');
+  const isOwn=d.from===myNick;
+  const time=new Date(d.ts).toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
+  box.innerHTML+=`<div style="display:flex;flex-direction:${isOwn?'row-reverse':'row'};gap:8px;margin-bottom:10px"><div style="font-size:18px">${d.av||'👤'}</div><div><div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:3px;text-align:${isOwn?'right':'left'}">${esc(d.from)} · ${time}</div><div style="font-size:13px;padding:8px 12px;border-radius:12px;max-width:260px;background:${isOwn?'rgba(124,58,237,.25)':'rgba(255,255,255,.07)'};border:1px solid ${isOwn?'rgba(124,58,237,.3)':'rgba(255,255,255,.08)'}">${esc(t)}</div></div></div>`;
+  box.scrollTop=box.scrollHeight;
+}
 
-        document.getElementById('login-scr').style.display = 'none';
-        document.getElementById('chat-scr').style.display = 'flex';
+function sendDm(){
+  const inp=document.getElementById('dm-input');
+  const text=inp.value.trim();
+  if(!text||!dmTarget) return;
+  dmCh.publish('dm',{from:myNick,to:dmTarget,av:myAv,text:enc(text),ts:Date.now()});
+  inp.value='';
+}
 
-        // Faqat admin bo'lmasa kirish xabari ketadi
-        if(myRole !== "admin") {
-            channel.publish('sys', { type: 'join', user: myNick });
-        }
+function closeDm(){document.getElementById('dm-overlay').classList.remove('active');dmTarget=null}
 
-        channel.subscribe('msg', (m) => renderMsg(m.data));
-        channel.subscribe('sys', (m) => handleSys(m.data));
-        
-        setInterval(updateOnline, 5000);
-    }
+document.getElementById('dm-input').addEventListener('keypress',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendDm()}});
 
-    function send() {
-        const inp = document.getElementById('msg-in');
-        if(!inp.value) return;
+function handleTyping(d){
+  if(d.nick===myNick) return;
+  const bar=document.getElementById('typing-bar');
+  if(d.typing) bar.textContent=d.nick+' yozmoqda...';
+  else bar.textContent='';
+}
 
-        let dNick = isStealth ? "user69" : myNick;
-        let dRole = isStealth ? "user" : myRole;
-        let dAv = (dRole === "admin") ? "👑" : (dRole === "helper" ? "🛡️" : "👤");
+function onInput(el){
+  el.style.height='';el.style.height=Math.min(el.scrollHeight,100)+'px';
+  if(!isTyping){isTyping=true;ch.publish('typing',{nick:myNick,typing:true})}
+  clearTimeout(typingTimer);typingTimer=setTimeout(stopTyping,2000);
+}
 
-        channel.publish('msg', { 
-            nick: dNick, 
-            text: inp.value, 
-            av: dAv, 
-            role: dRole 
-        });
-        inp.value = '';
-    }
+document.getElementById('msg-input').addEventListener('keypress',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}
+});
 
-    // ENTER TUGMASI BILAN YUBORISH
-    document.getElementById('msg-in').addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') send();
-    });
+function stopTyping(){isTyping=false;ch.publish('typing',{nick:myNick,typing:false})}
 
-    function renderMsg(data) {
-        const box = document.getElementById('chat-container');
-        const div = document.createElement('div');
-        div.className = 'msg';
-        
-        let nStyle = (data.role === 'admin') ? 'admin-txt' : (data.role === 'helper' ? 'helper-txt' : '');
-        let rTag = (data.role === 'admin') ? ' [ADMIN]' : (data.role === 'helper' ? ' [HELPER]' : '');
-        
-        // Agar havf shifrlash rejimi yoqilgan bo'lsa, eski xabarlar shifr ko'rinadi
-        let outText = shifrMode ? CryptoJS.AES.encrypt(data.text, cKey).toString().substring(0, 30) + "..." : data.text;
+function updatePresence(){
+  presCh.presence.get((err,members)=>{
+    if(err) return;
+    presenceList=members;
+    document.getElementById('online-count').textContent=members.length;
+    const list=document.getElementById('users-list');
+    list.innerHTML=members.map(m=>{
+      const role=m.data.role||'user';
+      const av=m.data.av||'👤';
+      const isMe=m.data.nick===myNick;
+      const roleTag=role==='admin'?'<span class="user-role-tag role-admin">ADMIN</span>':role==='helper'?'<span class="user-role-tag role-helper">HELPER</span>':'<span class="user-role-tag role-user">USER</span>';
+      return `<div class="user-item ${isMe?'':'clickable-dm'}" ${isMe?'':'onclick="openDm(\''+esc(m.data.nick)+'\',\''+av+'\')"'} title="${isMe?'Bu siz':'Shaxsiy chat ochish'}">
+        <div class="user-av">${av}</div>
+        <span class="user-nick">${esc(m.data.nick)}${isMe?' (siz)':''}</span>
+        ${roleTag}
+      </div>`;
+    }).join('');
+  });
+}
 
-        div.innerHTML = `<span class="${nStyle}">${data.av}${rTag} ${data.nick}:</span> <span>${outText}</span>`;
-        box.appendChild(div);
-        box.scrollTop = box.scrollHeight;
-    }
+setInterval(updatePresence,8000);
 
-    function handleSys(data) {
-        const box = document.getElementById('chat-container');
-        if(data.type === 'join' && myRole === 'admin') {
-            box.innerHTML += `<div class="sys-msg">>> ${data.user} TARMOQQA ULASHDI</div>`;
-        } else if(data.type === 'clear') {
-            box.innerHTML = '<div class="sys-msg" style="color:var(--neon); border: 1px dashed var(--neon); padding: 5px;">[ CHAT TOZALANDI ]</div>';
-        } else if(data.type === 'theme') {
-            document.getElementById('main-body').className = 'neon-bg-' + data.color;
-        } else if(data.type === 'havf-shifr') {
-            shifrMode = true;
-            // Chatdagi bor xabarlarni vizual o'zgartirish
-            const allSpans = document.querySelectorAll('.msg span:last-child');
-            allSpans.forEach(s => s.innerText = "X_SHIFR_" + Math.random().toString(36).substring(7));
-            box.innerHTML += `<div class="sys-msg" style="color:var(--super); border:1px solid var(--super);">🚨 OLDINGI YOZISHMALAR SHIFRLANDI!</div>`;
-        } else if(data.type === 'havf-exit') {
-            if(myRole !== 'admin') {
-                box.innerHTML = "";
-                document.body.innerHTML = "<div style='color:red; text-align:center; margin-top:20%'><h1>🚨 CHAT HAVF OSTIDA!</h1><p>ADMIN CHATNI YOPDI. TIZIMDAN CHIQARILDINGIZ.</p></div>";
-                setTimeout(() => location.reload(), 4000);
-            }
-        }
-        box.scrollTop = box.scrollHeight;
-    }
+function addSysLog(text,type=''){
+  const box=document.getElementById('msgs');
+  box.innerHTML+=`<div class="sys-log ${type}">${text}</div>`;
+  box.scrollTop=box.scrollHeight;
+}
 
-    function togglePanel(id) {
-        const p = document.getElementById(id);
-        p.style.display = (p.style.display === 'block') ? 'none' : 'block';
-    }
+function toggleSidebar(){
+  const s=document.getElementById('sidebar');
+  if(window.innerWidth<=600){s.classList.toggle('mobile-open')}
+  else{s.classList.toggle('hidden')}
+}
 
-    function toggleStealth() {
-        isStealth = !isStealth;
-        alert(isStealth ? "Niqoblanish yoqildi: user69" : "Niqoblanish o'chirildi.");
-    }
+function toggleStealth(){
+  isStealth=!isStealth;
+  document.getElementById('stealth-lbl').textContent=isStealth?'on':'off';
+  toast(isStealth?'Niqob yoqildi — anonim rejim':'Niqob o\'chirildi');
+}
 
-    function sendAction(t) { channel.publish('sys', { type: t }); }
-    function changeTheme(c) { channel.publish('sys', { type: 'theme', color: c }); }
-    function updateOnline() { ably.presence.get((err, m) => { if(!err) document.getElementById('online-count').innerText = m.length; }); }
+function exportChat(){
+  if(!msgHistory.length){toast('Eksport qilish uchun xabar yo\'q');return}
+  const txt=msgHistory.map(m=>`[${m.time}] ${m.nick} (${m.role}): ${m.text}`).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));
+  a.download='whoami-chat-'+Date.now()+'.txt';a.click();
+  toast('Chat saqlandi!');closeModal('admin-modal');closeModal('helper-modal');
+}
+
+function clearMine(){
+  document.querySelectorAll('.msg.own').forEach(e=>e.remove());
+  toast('O\'z xabarlaringiz o\'chirildi (lokal)');
+}
+
+function sendSys(type){sysCh.publish('sys',{type});closeModal('admin-modal');closeModal('helper-modal')}
+
+function toggleLock(){
+  chatLocked=!chatLocked;
+  sysCh.publish('sys',{type:chatLocked?'lock':'unlock'});
+  closeModal('admin-modal');
+}
+
+function confirmKick(){
+  if(confirm('Haqiqatan ham barchani chiqarmoqchimisiz?')){
+    sysCh.publish('sys',{type:'kick'});closeModal('admin-modal');
+  }
+}
+
+function showAnnounceInput(){
+  const txt=prompt('E\'lon matni:');
+  if(txt&&txt.trim()){sysCh.publish('sys',{type:'announce',text:txt.trim()});closeModal('admin-modal')}
+}
+
+function changeTheme(c){sysCh.publish('sys',{type:'theme',color:c});closeModal('admin-modal');closeModal('helper-modal')}
+
+function applyTheme(c){
+  document.body.style.background={
+    purple:'linear-gradient(135deg,#0d0d1a 0%,#1a0a28 40%,#0d0d1a 100%)',
+    teal:'linear-gradient(135deg,#0a1a1a 0%,#0a2822 40%,#0a1a1a 100%)',
+    rose:'linear-gradient(135deg,#1a0d0d 0%,#280a0a 40%,#1a0d0d 100%)',
+    default:'linear-gradient(135deg,#0d0d1a 0%,#0a1628 40%,#0d0d1a 100%)'
+  }[c]||'linear-gradient(135deg,#0d0d1a 0%,#0a1628 40%,#0d0d1a 100%)';
+}
+
+function openModal(id){document.getElementById(id).classList.add('active')}
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+function closeModalBg(e,id){if(e.target===document.getElementById(id))closeModal(id)}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 </script>
 </body>
 </html>
