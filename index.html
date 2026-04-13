@@ -2,716 +2,735 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>WHOAMI SEC</title>
 <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
 
 body{
-  background: linear-gradient(135deg,#0d0d1a 0%,#0a1628 40%,#0d0d1a 100%);
+  background:#080b14;
   color:#e2e8f0;
-  display:flex;flex-direction:column;height:100vh;
+  display:flex;flex-direction:column;height:100vh;position:relative;
 }
 body::before{
-  content:'';position:fixed;top:0;left:0;right:0;bottom:0;
-  background: radial-gradient(ellipse at 20% 20%,rgba(99,102,241,.12) 0%,transparent 50%),
-              radial-gradient(ellipse at 80% 80%,rgba(139,92,246,.10) 0%,transparent 50%),
-              radial-gradient(ellipse at 50% 50%,rgba(59,130,246,.06) 0%,transparent 70%);
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 15%,rgba(99,102,241,.18) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 60% at 85% 85%,rgba(139,92,246,.14) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 0%,rgba(56,189,248,.08) 0%,transparent 50%);
   pointer-events:none;z-index:0;
 }
 
-.glass{
-  background:rgba(255,255,255,.06);
-  backdrop-filter:blur(20px) saturate(1.5);
-  -webkit-backdrop-filter:blur(20px) saturate(1.5);
-  border:1px solid rgba(255,255,255,.12);
-}
-.glass-dark{
-  background:rgba(0,0,0,.35);
-  backdrop-filter:blur(24px);
-  -webkit-backdrop-filter:blur(24px);
-  border:1px solid rgba(255,255,255,.08);
-}
+/* GLASS */
+.g1{background:rgba(255,255,255,.06);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,.13)}
+.g2{background:rgba(255,255,255,.04);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}
 
 /* SCREENS */
-.screen{display:none;position:fixed;inset:0;z-index:100;justify-content:center;align-items:center;padding:16px}
-.screen.active{display:flex}
+.scr{display:none;position:fixed;inset:0;z-index:200;justify-content:center;align-items:center;padding:16px}
+.scr.on{display:flex}
 
 /* LOGIN */
-#login-screen{background:linear-gradient(135deg,#0d0d1a,#0a1628)}
-.login-card{
-  width:100%;max-width:420px;padding:36px 32px;border-radius:24px;position:relative;z-index:1;
+#ls{background:linear-gradient(160deg,#08091a,#0c1225,#080b14)}
+.lcard{
+  width:100%;max-width:400px;padding:36px 30px 28px;border-radius:28px;position:relative;z-index:1;
   background:rgba(255,255,255,.07);
-  backdrop-filter:blur(30px);
-  border:1px solid rgba(255,255,255,.15);
-  box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05);
+  backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 40px 100px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.12);
 }
-.login-logo{text-align:center;margin-bottom:28px}
-.login-logo h1{font-size:26px;font-weight:700;letter-spacing:3px;color:#fff;text-shadow:0 0 30px rgba(139,92,246,.6)}
-.login-logo p{font-size:12px;color:rgba(255,255,255,.4);letter-spacing:4px;margin-top:4px}
+.lcard::before{
+  content:'';position:absolute;inset:-1px;border-radius:29px;
+  background:linear-gradient(135deg,rgba(139,92,246,.3),rgba(99,102,241,.15),transparent 60%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;padding:1px;pointer-events:none;
+}
 
-.avatar-picker{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:20px}
-.av-opt{
-  width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:20px;
+.logo-wrap{text-align:center;margin-bottom:28px}
+.logo-icon{width:56px;height:56px;border-radius:18px;margin:0 auto 12px;
+  background:linear-gradient(135deg,#7c3aed,#4f46e5);
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  box-shadow:0 8px 24px rgba(124,58,237,.4)}
+.logo-title{font-size:22px;font-weight:800;letter-spacing:4px;
+  background:linear-gradient(135deg,#a78bfa,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:5px;margin-top:4px}
+
+.av-wrap{margin-bottom:20px}
+.av-label{font-size:11px;color:rgba(255,255,255,.35);letter-spacing:2px;text-align:center;margin-bottom:10px}
+.av-grid{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.av-item{
+  width:46px;height:46px;border-radius:14px;cursor:pointer;font-size:22px;
   display:flex;align-items:center;justify-content:center;
-  border:2px solid transparent;transition:all .2s;
-  background:rgba(255,255,255,.1);
+  background:rgba(255,255,255,.07);border:2px solid transparent;transition:all .2s;
 }
-.av-opt:hover{transform:scale(1.15);border-color:rgba(255,255,255,.4)}
-.av-opt.selected{border-color:#a78bfa;box-shadow:0 0 12px rgba(167,139,250,.5);transform:scale(1.1)}
+.av-item:hover{background:rgba(255,255,255,.12);transform:scale(1.1)}
+.av-item.sel{border-color:#a78bfa;background:rgba(167,139,250,.15);box-shadow:0 0 16px rgba(167,139,250,.3);transform:scale(1.08)}
 
-.input-group{position:relative;margin-bottom:12px}
-.input-group input{
-  width:100%;padding:13px 16px;border-radius:12px;outline:none;font-size:14px;
-  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;
-  transition:all .2s;
+.fi{position:relative;margin-bottom:10px}
+.fi input,.fi textarea{
+  width:100%;padding:12px 14px;border-radius:12px;outline:none;font-size:14px;
+  background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);color:#fff;
+  transition:all .2s;font-family:inherit;
 }
-.input-group input::placeholder{color:rgba(255,255,255,.3)}
-.input-group input:focus{background:rgba(255,255,255,.12);border-color:rgba(167,139,250,.6);box-shadow:0 0 0 3px rgba(167,139,250,.15)}
-.input-group .lock-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);opacity:.4;font-size:14px;pointer-events:none}
+.fi input::placeholder{color:rgba(255,255,255,.25)}
+.fi input:focus{background:rgba(255,255,255,.11);border-color:rgba(167,139,250,.55);box-shadow:0 0 0 3px rgba(167,139,250,.12)}
+.fi-ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.35;pointer-events:none}
+#pass-hint{font-size:11px;color:rgba(167,139,250,.6);margin:-4px 0 8px 4px;display:none;letter-spacing:.5px}
 
-#pass-hint{font-size:11px;color:rgba(255,255,255,.3);margin:-6px 0 10px 4px;display:none}
-
-.btn-login{
-  width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;font-size:15px;font-weight:600;letter-spacing:1px;
-  background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;margin-top:4px;
-  transition:all .2s;box-shadow:0 4px 20px rgba(124,58,237,.4);
+.btn-go{
+  width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;font-size:15px;font-weight:700;letter-spacing:1px;
+  background:linear-gradient(135deg,#7c3aed 0%,#4f46e5 100%);color:#fff;margin-top:4px;
+  transition:all .2s;box-shadow:0 6px 24px rgba(124,58,237,.45);position:relative;overflow:hidden;
 }
-.btn-login:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(124,58,237,.5)}
-.btn-login:active{transform:translateY(0)}
-.login-err{color:#f87171;font-size:12px;text-align:center;margin-top:8px;min-height:18px}
+.btn-go::after{content:'';position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.1),transparent);pointer-events:none}
+.btn-go:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(124,58,237,.55)}
+.btn-go:active{transform:translateY(0);box-shadow:0 4px 16px rgba(124,58,237,.35)}
+.lerr{color:#f87171;font-size:12px;text-align:center;margin-top:8px;min-height:16px}
 
-/* MAIN APP */
-#app{display:none;flex-direction:column;height:100vh;position:relative;z-index:1}
-#app.active{display:flex}
+/* APP */
+#app{display:none;flex-direction:column;height:100%;position:relative;z-index:1}
+#app.on{display:flex}
 
 /* TOPBAR */
-.topbar{
+.tbar{
   display:flex;align-items:center;gap:10px;padding:10px 14px;flex-shrink:0;
-  background:rgba(0,0,0,.4);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.08);
+  background:rgba(5,7,18,.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.08);position:relative;z-index:10;
 }
-.topbar-logo{font-size:15px;font-weight:700;letter-spacing:2px;color:#fff;flex-shrink:0}
-.online-pill{
+.tbar-logo{font-size:15px;font-weight:800;letter-spacing:3px;
+  background:linear-gradient(135deg,#a78bfa,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.online-badge{
   display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:12px;
-  background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#4ade80;
+  background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80;
 }
-.online-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-.topbar-actions{margin-left:auto;display:flex;gap:6px;align-items:center}
-.tb-btn{
-  padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;border:none;
-  background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);transition:all .2s;font-weight:500;
+.odot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.tbar-r{margin-left:auto;display:flex;gap:6px;align-items:center}
+.tbb{
+  padding:5px 12px;border-radius:9px;font-size:12px;cursor:pointer;border:none;
+  background:rgba(255,255,255,.07);color:rgba(255,255,255,.65);transition:all .2s;font-weight:600;
 }
-.tb-btn:hover{background:rgba(255,255,255,.15);color:#fff}
-.tb-btn.admin{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25)}
-.tb-btn.admin:hover{background:rgba(239,68,68,.25)}
-.tb-btn.helper{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
-.tb-btn.helper:hover{background:rgba(59,130,246,.25)}
+.tbb:hover{background:rgba(255,255,255,.13);color:#fff}
+.tbb-adm{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
+.tbb-adm:hover{background:rgba(239,68,68,.22)}
+.tbb-hlp{background:rgba(56,189,248,.12);color:#7dd3fc;border:1px solid rgba(56,189,248,.2)}
+.tbb-hlp:hover{background:rgba(56,189,248,.22)}
+
+/* ANNOUNCE */
+#ann{
+  display:none;padding:7px 14px;font-size:12px;text-align:center;flex-shrink:0;
+  background:rgba(251,191,36,.1);border-bottom:1px solid rgba(251,191,36,.2);color:#fde68a;
+}
+#ann.on{display:block}
 
 /* LAYOUT */
-.main-layout{display:flex;flex:1;overflow:hidden}
+.layout{display:flex;flex:1;overflow:hidden}
 
 /* SIDEBAR */
-#sidebar{
-  width:240px;flex-shrink:0;display:flex;flex-direction:column;
-  background:rgba(0,0,0,.3);border-right:1px solid rgba(255,255,255,.07);
-  transition:transform .3s;overflow:hidden;
+#sb{
+  width:230px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;
+  background:rgba(0,0,0,.25);border-right:1px solid rgba(255,255,255,.07);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);
 }
-#sidebar.hidden{display:none}
-.sidebar-section{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
-.sidebar-title{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:8px}
-.user-item{
-  display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;margin-bottom:3px;
-  cursor:pointer;transition:background .15s;
-}
-.user-item:hover{background:rgba(255,255,255,.07)}
-.user-item.clickable-dm:hover .user-nick{color:#a78bfa}
-.user-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:rgba(255,255,255,.1)}
-.user-nick{font-size:13px;font-weight:500;color:#e2e8f0}
-.user-role-tag{font-size:10px;padding:1px 6px;border-radius:4px;margin-left:auto;flex-shrink:0}
-.role-admin{background:rgba(239,68,68,.2);color:#f87171}
-.role-helper{background:rgba(59,130,246,.2);color:#60a5fa}
-.role-user{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4)}
+#sb.off{display:none}
 
-.sidebar-btn{
-  display:block;width:100%;padding:8px 10px;border-radius:10px;border:none;cursor:pointer;
-  font-size:12px;text-align:left;margin-bottom:4px;transition:all .15s;background:transparent;color:rgba(255,255,255,.6);
+.sb-sec{padding:12px 12px;border-bottom:1px solid rgba(255,255,255,.05)}
+.sb-ttl{font-size:10px;letter-spacing:2.5px;color:rgba(255,255,255,.25);text-transform:uppercase;margin-bottom:8px}
+.uitem{
+  display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:11px;margin-bottom:2px;
+  cursor:pointer;transition:all .15s;
 }
-.sidebar-btn:hover{background:rgba(255,255,255,.08);color:#fff}
-.sidebar-btn.red:hover{background:rgba(239,68,68,.15);color:#f87171}
-.sidebar-btn.blue:hover{background:rgba(59,130,246,.15);color:#60a5fa}
-.sidebar-btn span{font-size:14px;margin-right:6px}
+.uitem:hover{background:rgba(255,255,255,.07)}
+.uitem.no-dm{cursor:default}
+.uitem.no-dm:hover{background:transparent}
+.uav{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:rgba(255,255,255,.08)}
+.uname{font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.utag{font-size:9px;padding:2px 6px;border-radius:5px;margin-left:auto;flex-shrink:0;font-weight:700;letter-spacing:.5px}
+.ta{background:rgba(239,68,68,.18);color:#fca5a5}
+.th{background:rgba(56,189,248,.18);color:#7dd3fc}
+.tu{background:rgba(255,255,255,.08);color:rgba(255,255,255,.35)}
+.dm-hint{font-size:10px;color:rgba(167,139,250,.5);margin-left:auto;display:none}
+.uitem:hover .dm-hint{display:block}
 
-/* CHAT AREA */
-.chat-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
-
-/* DM OVERLAY */
-#dm-overlay{
-  display:none;position:absolute;inset:0;z-index:50;flex-direction:column;
-  background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
+.sb-sec2{padding:10px 12px;flex:1;overflow-y:auto}
+.sbtn{
+  display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:10px;border:none;cursor:pointer;
+  font-size:12px;text-align:left;margin-bottom:3px;transition:all .15s;background:transparent;color:rgba(255,255,255,.5);
+  font-family:inherit;
 }
-#dm-overlay.active{display:flex}
-.dm-topbar{
-  display:flex;align-items:center;gap:10px;padding:10px 14px;
+.sbtn:hover{background:rgba(255,255,255,.08);color:#fff}
+
+/* CHAT */
+.cwrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+/* DM */
+#dmov{
+  display:none;position:absolute;inset:0;z-index:30;flex-direction:column;
+  background:rgba(8,11,20,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+#dmov.on{display:flex}
+.dm-tb{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;flex-shrink:0;
   background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.08);
 }
-.dm-topbar h3{font-size:14px;font-weight:600;color:#fff}
-.dm-close-btn{
-  margin-left:auto;padding:4px 10px;border-radius:8px;border:none;cursor:pointer;
-  background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);font-size:12px;
-}
+.dm-info{flex:1}
+.dm-info h3{font-size:14px;font-weight:700;color:#fff}
+.dm-info p{font-size:11px;color:rgba(255,255,255,.35)}
+.dm-close{padding:5px 12px;border-radius:9px;border:none;cursor:pointer;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);font-size:12px;font-family:inherit}
+.dm-close:hover{background:rgba(255,255,255,.14);color:#fff}
+#dmmsgs{flex:1;overflow-y:auto;padding:12px 14px}
+#dmmsgs::-webkit-scrollbar{width:3px}
+#dmmsgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08)}
 
-#msgs{flex:1;overflow-y:auto;padding:12px 14px;scroll-behavior:smooth}
+/* MESSAGES */
+#msgs{flex:1;overflow-y:auto;padding:14px 14px 6px;scroll-behavior:smooth}
 #msgs::-webkit-scrollbar{width:4px}
-#msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+#msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}
 
-.msg{display:flex;gap:10px;margin-bottom:14px;animation:fadeUp .25s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.msg-av{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,.1);margin-top:2px}
-.msg-body{flex:1;min-width:0}
-.msg-header{display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap}
-.msg-nick{font-size:13px;font-weight:600}
-.nick-admin{color:#f87171}
-.nick-helper{color:#60a5fa}
-.nick-user{color:#a78bfa}
-.msg-role-badge{font-size:10px;padding:1px 6px;border-radius:4px}
-.badge-admin{background:rgba(239,68,68,.2);color:#f87171}
-.badge-helper{background:rgba(59,130,246,.2);color:#60a5fa}
-.msg-time{font-size:11px;color:rgba(255,255,255,.25);margin-left:auto}
-.msg-text{
-  font-size:14px;line-height:1.55;color:rgba(255,255,255,.85);word-break:break-word;
-  background:rgba(255,255,255,.05);padding:8px 12px;border-radius:0 12px 12px 12px;
-  border:1px solid rgba(255,255,255,.08);display:inline-block;max-width:100%;
+.msg{display:flex;gap:10px;margin-bottom:16px;animation:up .22s ease}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.mav{width:38px;height:38px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);align-self:flex-start;margin-top:1px;position:relative}
+.mav .role-dot{position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;border-radius:50%;border:2px solid #080b14}
+.rd-adm{background:#f87171}
+.rd-hlp{background:#38bdf8}
+.rd-usr{background:#a78bfa}
+
+.mbody{flex:1;min-width:0}
+.mhead{display:flex;align-items:center;gap:7px;margin-bottom:4px;flex-wrap:wrap}
+.mnick{font-size:13px;font-weight:700}
+.na{color:#f87171}
+.nh{color:#38bdf8}
+.nu{color:#a78bfa}
+
+.mbadge{
+  font-size:10px;padding:2px 8px;border-radius:6px;font-weight:700;letter-spacing:.5px;
 }
+.ba{background:linear-gradient(135deg,rgba(239,68,68,.25),rgba(220,38,38,.2));color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
+.bh{background:linear-gradient(135deg,rgba(56,189,248,.2),rgba(14,165,233,.15));color:#7dd3fc;border:1px solid rgba(56,189,248,.2)}
+
+.admin-title{
+  font-size:9px;letter-spacing:2px;color:#fca5a5;background:rgba(239,68,68,.1);
+  padding:1px 6px;border-radius:4px;border:1px solid rgba(239,68,68,.15);
+}
+
+.mtime{font-size:11px;color:rgba(255,255,255,.2);margin-left:auto}
+.mtext{
+  font-size:14px;line-height:1.6;color:rgba(255,255,255,.88);word-break:break-word;
+  background:rgba(255,255,255,.05);padding:9px 13px;border-radius:4px 14px 14px 14px;
+  border:1px solid rgba(255,255,255,.08);display:inline-block;max-width:85%;
+}
+.mtext.is-adm{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.15)}
+.mtext.is-hlp{background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.12)}
+
 .msg.own{flex-direction:row-reverse}
-.msg.own .msg-header{flex-direction:row-reverse}
-.msg.own .msg-time{margin-left:0;margin-right:auto}
-.msg.own .msg-text{
-  background:rgba(124,58,237,.2);border-color:rgba(124,58,237,.3);border-radius:12px 0 12px 12px;
-}
-.msg.own .msg-role-badge{display:none}
+.msg.own .mhead{flex-direction:row-reverse}
+.msg.own .mtime{margin-left:0;margin-right:auto}
+.msg.own .mtext{background:rgba(124,58,237,.22);border-color:rgba(124,58,237,.3);border-radius:14px 4px 14px 14px;color:#e0d9ff}
+.msg.own .mbadge,.msg.own .admin-title{display:none}
 
-.sys-log{
-  text-align:center;font-size:11px;color:rgba(255,255,255,.25);margin:6px 0;padding:4px 0;
-  border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05);
-}
-.sys-log.join{color:rgba(74,222,128,.4)}
-.sys-log.leave{color:rgba(248,113,113,.35)}
-.sys-log.warn{color:rgba(251,191,36,.45)}
+.syslog{text-align:center;font-size:11px;color:rgba(255,255,255,.2);margin:4px 0 10px;padding:5px 12px;position:relative}
+.syslog::before,.syslog::after{content:'';position:absolute;top:50%;width:calc(50% - 80px);height:1px;background:rgba(255,255,255,.06)}
+.syslog::before{left:0}.syslog::after{right:0}
+.sl-j{color:rgba(74,222,128,.45)}
+.sl-l{color:rgba(248,113,113,.35)}
+.sl-w{color:rgba(251,191,36,.4)}
 
-#typing-bar{font-size:11px;color:rgba(255,255,255,.3);padding:2px 14px;min-height:18px;flex-shrink:0}
+#tybar{font-size:11px;color:rgba(255,255,255,.28);padding:2px 14px;min-height:18px;flex-shrink:0}
 
 /* INPUT */
-.input-area{
+.ibar{
   display:flex;align-items:flex-end;gap:8px;padding:10px 12px;flex-shrink:0;
-  background:rgba(0,0,0,.35);border-top:1px solid rgba(255,255,255,.07);
+  background:rgba(5,7,18,.5);backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.07);
 }
-#msg-input{
-  flex:1;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);outline:none;
-  background:rgba(255,255,255,.08);color:#fff;font-size:14px;resize:none;min-height:42px;max-height:100px;
-  font-family:inherit;line-height:1.4;
+.itxt{
+  flex:1;padding:10px 14px;border-radius:14px;border:1.5px solid rgba(255,255,255,.1);outline:none;
+  background:rgba(255,255,255,.07);color:#fff;font-size:14px;resize:none;min-height:44px;max-height:110px;
+  font-family:inherit;line-height:1.45;transition:all .2s;
 }
-#msg-input::placeholder{color:rgba(255,255,255,.25)}
-#msg-input:focus{border-color:rgba(167,139,250,.5);background:rgba(255,255,255,.1)}
-.send-btn{
-  width:42px;height:42px;border-radius:12px;border:none;cursor:pointer;flex-shrink:0;
+.itxt::placeholder{color:rgba(255,255,255,.22)}
+.itxt:focus{border-color:rgba(167,139,250,.45);background:rgba(255,255,255,.09)}
+.sbtn-send{
+  width:44px;height:44px;border-radius:13px;border:none;cursor:pointer;flex-shrink:0;
   background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;font-size:18px;
   display:flex;align-items:center;justify-content:center;transition:all .2s;
+  box-shadow:0 4px 16px rgba(124,58,237,.35);
 }
-.send-btn:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(124,58,237,.5)}
-.send-btn:active{transform:scale(.95)}
+.sbtn-send:hover{transform:scale(1.06);box-shadow:0 6px 22px rgba(124,58,237,.5)}
+.sbtn-send:active{transform:scale(.94)}
 
-/* ADMIN MODAL */
-#admin-modal{
-  display:none;position:fixed;inset:0;z-index:200;justify-content:center;align-items:flex-end;
-  background:rgba(0,0,0,.6);backdrop-filter:blur(6px);
+/* MODAL */
+.modal-bg{
+  display:none;position:fixed;inset:0;z-index:300;justify-content:flex-end;align-items:flex-end;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
 }
-#admin-modal.active{display:flex}
-.modal-sheet{
-  width:100%;max-width:520px;padding:20px;border-radius:24px 24px 0 0;
-  background:rgba(15,15,25,.95);border:1px solid rgba(255,255,255,.12);border-bottom:none;
-  max-height:80vh;overflow-y:auto;
+.modal-bg.on{display:flex}
+.modal-sh{
+  width:100%;max-width:500px;margin:0 auto;padding:22px 18px 28px;
+  border-radius:24px 24px 0 0;
+  background:rgba(12,14,28,.97);
+  border:1px solid rgba(255,255,255,.12);border-bottom:none;
+  max-height:82vh;overflow-y:auto;
 }
-.modal-title{font-size:14px;font-weight:700;letter-spacing:2px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
-.modal-title.red{color:#f87171}
-.modal-title.blue{color:#60a5fa}
-.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-.m-btn{
-  padding:11px 10px;border-radius:12px;border:none;cursor:pointer;font-size:12px;font-weight:600;
-  letter-spacing:.5px;transition:all .2s;text-align:center;
+.msh-title{
+  font-size:13px;font-weight:800;letter-spacing:2px;margin-bottom:16px;
+  padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.07);
+  display:flex;align-items:center;gap:8px;
 }
-.m-btn-default{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
-.m-btn-default:hover{background:rgba(255,255,255,.15);color:#fff}
-.m-btn-red{background:rgba(239,68,68,.15);color:#f87171}
-.m-btn-red:hover{background:rgba(239,68,68,.25)}
-.m-btn-blue{background:rgba(59,130,246,.15);color:#60a5fa}
-.m-btn-blue:hover{background:rgba(59,130,246,.25)}
-.m-btn-green{background:rgba(34,197,94,.15);color:#4ade80}
-.m-btn-green:hover{background:rgba(34,197,94,.25)}
-.m-btn-full{grid-column:1/-1}
-.modal-close{width:100%;padding:11px;border-radius:12px;border:none;cursor:pointer;background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-size:13px;margin-top:4px}
+.msh-title.red{color:#f87171}
+.msh-title.blue{color:#7dd3fc}
+.msh-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.mb{
+  padding:11px 10px;border-radius:12px;border:none;cursor:pointer;font-size:12px;font-weight:700;
+  letter-spacing:.5px;transition:all .2s;text-align:center;font-family:inherit;
+}
+.mb-d{background:rgba(255,255,255,.07);color:rgba(255,255,255,.65)}
+.mb-d:hover{background:rgba(255,255,255,.13);color:#fff}
+.mb-r{background:rgba(239,68,68,.12);color:#fca5a5}
+.mb-r:hover{background:rgba(239,68,68,.22)}
+.mb-b{background:rgba(56,189,248,.1);color:#7dd3fc}
+.mb-b:hover{background:rgba(56,189,248,.2)}
+.mb-g{background:rgba(74,222,128,.1);color:#86efac}
+.mb-g:hover{background:rgba(74,222,128,.2)}
+.mb-v{background:rgba(167,139,250,.12);color:#c4b5fd}
+.mb-v:hover{background:rgba(167,139,250,.22)}
+.mb-full{grid-column:1/-1}
+.mb-close{width:100%;padding:10px;border-radius:11px;border:none;cursor:pointer;background:rgba(255,255,255,.04);color:rgba(255,255,255,.3);font-size:13px;margin-top:4px;font-family:inherit}
 
 /* TOAST */
 #toast{
-  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:rgba(20,20,35,.95);border:1px solid rgba(255,255,255,.15);
-  padding:10px 18px;border-radius:12px;font-size:13px;color:#fff;
-  opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:999;
+  position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(12px);z-index:999;
+  background:rgba(18,22,42,.97);border:1px solid rgba(255,255,255,.14);
+  padding:9px 18px;border-radius:12px;font-size:13px;color:#e2e8f0;
+  opacity:0;transition:all .28s cubic-bezier(.4,0,.2,1);pointer-events:none;white-space:nowrap;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
 }
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ANNOUNCE BANNER */
-#announce-bar{
-  display:none;padding:8px 14px;font-size:12px;text-align:center;
-  background:rgba(251,191,36,.1);border-bottom:1px solid rgba(251,191,36,.2);color:#fbbf24;
-}
-#announce-bar.active{display:block}
-
-/* MOBILE */
 @media(max-width:600px){
-  #sidebar{position:fixed;left:0;top:0;bottom:0;z-index:80;width:220px;transform:translateX(-100%)}
-  #sidebar.mobile-open{transform:translateX(0)}
-  .login-card{padding:24px 20px}
-  .modal-grid{grid-template-columns:1fr}
-  .topbar-logo{font-size:13px}
+  #sb{position:fixed;left:0;top:0;bottom:0;z-index:90;transform:translateX(-100%);box-shadow:8px 0 32px rgba(0,0,0,.5)}
+  #sb.mob{transform:translateX(0)}
+  #sb.off{display:flex;transform:translateX(-100%)}
+  .msh-grid{grid-template-columns:1fr}
+  .lcard{border-radius:20px;padding:28px 20px 22px}
 }
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="login-screen" class="screen active">
-<div class="login-card">
-  <div class="login-logo">
-    <h1>WHOAMI</h1>
-    <p>SECURE CHANNEL</p>
+<div id="ls" class="scr on">
+<div class="lcard">
+  <div class="logo-wrap">
+    <div class="logo-icon">🔐</div>
+    <div class="logo-title">WHOAMI SEC</div>
+    <div class="logo-sub">ENCRYPTED CHANNEL</div>
   </div>
 
-  <p style="font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-bottom:12px;letter-spacing:1px">AVATAR TANLANG</p>
-  <div class="avatar-picker" id="av-picker">
-    <div class="av-opt selected" data-av="🦊" onclick="selectAv(this)">🦊</div>
-    <div class="av-opt" data-av="🐺" onclick="selectAv(this)">🐺</div>
-    <div class="av-opt" data-av="🦅" onclick="selectAv(this)">🦅</div>
-    <div class="av-opt" data-av="🐉" onclick="selectAv(this)">🐉</div>
-    <div class="av-opt" data-av="🤖" onclick="selectAv(this)">🤖</div>
-    <div class="av-opt" data-av="👾" onclick="selectAv(this)">👾</div>
-    <div class="av-opt" data-av="🎭" onclick="selectAv(this)">🎭</div>
-    <div class="av-opt" data-av="🔮" onclick="selectAv(this)">🔮</div>
+  <div class="av-wrap">
+    <div class="av-label">AVATAR TANLANG</div>
+    <div class="av-grid" id="avpick">
+      <div class="av-item sel" data-v="🦊" onclick="pickAv(this)">🦊</div>
+      <div class="av-item" data-v="🐺" onclick="pickAv(this)">🐺</div>
+      <div class="av-item" data-v="🦅" onclick="pickAv(this)">🦅</div>
+      <div class="av-item" data-v="🐉" onclick="pickAv(this)">🐉</div>
+      <div class="av-item" data-v="🤖" onclick="pickAv(this)">🤖</div>
+      <div class="av-item" data-v="👾" onclick="pickAv(this)">👾</div>
+      <div class="av-item" data-v="🎭" onclick="pickAv(this)">🎭</div>
+      <div class="av-item" data-v="🔮" onclick="pickAv(this)">🔮</div>
+      <div class="av-item" data-v="🦁" onclick="pickAv(this)">🦁</div>
+      <div class="av-item" data-v="🐍" onclick="pickAv(this)">🐍</div>
+    </div>
   </div>
 
-  <div class="input-group" style="margin-top:8px">
-    <input type="text" id="nick-in" placeholder="Taxallus (nik) kiriting..." maxlength="20" oninput="onNickInput(this.value)" autocomplete="off">
+  <div class="fi">
+    <input type="text" id="nin" placeholder="Taxallus (nik) kiriting..." maxlength="20" autocomplete="off" oninput="onNik(this.value)">
   </div>
-  <p id="pass-hint">Parol kiriting (maxsus rol uchun)</p>
-  <div class="input-group" id="pass-box" style="display:none">
-    <input type="password" id="pass-in" placeholder="Maxfiy kalit..." maxlength="50">
-    <span class="lock-icon">🔒</span>
+  <p id="phint">🔑 Maxfiy kalit kiriting</p>
+  <div class="fi" id="pbox" style="display:none">
+    <input type="password" id="pin" placeholder="Parol..." maxlength="50">
+    <span class="fi-ico">🔒</span>
   </div>
-  <button class="btn-login" onclick="doLogin()">KIRISH</button>
-  <p class="login-err" id="login-err"></p>
+  <button class="btn-go" onclick="doLogin()">KIRISH ➤</button>
+  <p class="lerr" id="lerr"></p>
 </div>
 </div>
 
 <!-- APP -->
 <div id="app">
-  <!-- ANNOUNCE -->
-  <div id="announce-bar" id="announce-bar"></div>
-
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="topbar-logo">WHOAMI SEC</div>
-    <div class="online-pill"><div class="online-dot"></div><span id="online-count">0</span> onlayn</div>
-    <div class="topbar-actions">
-      <button class="tb-btn" id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
-      <button class="tb-btn admin" id="adm-btn" style="display:none" onclick="openModal('admin-modal')">⚙ Admin</button>
-      <button class="tb-btn helper" id="hlp-btn" style="display:none" onclick="openModal('helper-modal')">🛡 Helper</button>
+  <div id="ann"></div>
+  <div class="tbar">
+    <div class="tbar-logo">WHOAMI</div>
+    <div class="online-badge"><div class="odot"></div><span id="ocnt">0</span>&nbsp;onlayn</div>
+    <div class="tbar-r">
+      <button class="tbb" onclick="toggleSb()">☰</button>
+      <button class="tbb tbb-adm" id="admb" style="display:none" onclick="openModal('adm-modal')">⚙ Admin</button>
+      <button class="tbb tbb-hlp" id="hlpb" style="display:none" onclick="openModal('hlp-modal')">🛡 Helper</button>
     </div>
   </div>
 
-  <div class="main-layout">
+  <div class="layout">
     <!-- SIDEBAR -->
-    <div id="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-title">Onlayn foydalanuvchilar</div>
-        <div id="users-list"></div>
+    <div id="sb" class="off">
+      <div class="sb-sec">
+        <div class="sb-ttl">Onlayn foydalanuvchilar</div>
+        <div id="ulist"></div>
       </div>
-      <div class="sidebar-section" style="flex:1;overflow-y:auto">
-        <div class="sidebar-title">Amallar</div>
-        <button class="sidebar-btn" onclick="toggleStealth()"><span>🎭</span>Niqob: <span id="stealth-lbl">off</span></button>
-        <button class="sidebar-btn" onclick="exportChat()"><span>💾</span>Chat eksport</button>
-        <button class="sidebar-btn blue" onclick="clearMine()"><span>🗑</span>O'z xabarlarimni o'chir</button>
+      <div class="sb-sec2">
+        <div class="sb-ttl">Amallar</div>
+        <button class="sbtn" onclick="doStealth()"><span style="font-size:15px">🎭</span>&nbsp;Niqob: <span id="stlbl">off</span></button>
+        <button class="sbtn" onclick="doExport()"><span style="font-size:15px">💾</span>&nbsp;Chat eksport</button>
       </div>
     </div>
 
-    <!-- CHAT -->
-    <div class="chat-wrap">
+    <!-- CHAT WRAP -->
+    <div class="cwrap">
+
       <!-- DM OVERLAY -->
-      <div id="dm-overlay">
-        <div class="dm-topbar">
-          <div id="dm-av" style="font-size:22px"></div>
-          <h3 id="dm-title">Shaxsiy chat</h3>
-          <button class="dm-close-btn" onclick="closeDm()">✕ Yopish</button>
+      <div id="dmov">
+        <div class="dm-tb">
+          <div id="dmav" style="font-size:26px;width:40px;text-align:center;flex-shrink:0"></div>
+          <div class="dm-info">
+            <h3 id="dmttl">Shaxsiy chat</h3>
+            <p>Xabarlar AES-256 bilan shifrlangan</p>
+          </div>
+          <button class="dm-close" onclick="closeDm()">✕ Yopish</button>
         </div>
-        <div id="dm-msgs" style="flex:1;overflow-y:auto;padding:12px 14px"></div>
-        <div class="input-area">
-          <textarea id="dm-input" placeholder="Shaxsiy xabar..." rows="1" style="flex:1;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:#fff;font-size:14px;resize:none;min-height:42px;outline:none;font-family:inherit"></textarea>
-          <button class="send-btn" onclick="sendDm()">➤</button>
+        <div id="dmmsgs"></div>
+        <div class="ibar">
+          <textarea class="itxt" id="dmin" placeholder="Shaxsiy xabar..." rows="1" onkeypress="dmKey(event)" oninput="autoH(this)"></textarea>
+          <button class="sbtn-send" onclick="sendDm()">➤</button>
         </div>
       </div>
 
       <div id="msgs"></div>
-      <div id="typing-bar"></div>
-      <div class="input-area">
-        <textarea id="msg-input" placeholder="Xabar yozing... (Enter - yuborish)" rows="1" oninput="onInput(this)"></textarea>
-        <button class="send-btn" onclick="sendMsg()">➤</button>
+      <div id="tybar"></div>
+      <div class="ibar">
+        <textarea class="itxt" id="min" placeholder="Xabar yozing... (Enter — yuborish)" rows="1" onkeypress="msgKey(event)" oninput="autoH(this)"></textarea>
+        <button class="sbtn-send" onclick="sendMsg()">➤</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ADMIN MODAL -->
-<div id="admin-modal" onclick="closeModalBg(event,'admin-modal')">
-<div class="modal-sheet" onclick="event.stopPropagation()">
-  <div class="modal-title red">⚙ Admin Boshqaruvi</div>
-  <div class="modal-grid">
-    <button class="m-btn m-btn-default" onclick="sendSys('clear')">🗑 Log tozalash</button>
-    <button class="m-btn m-btn-default" onclick="toggleLock()">🔒 Chat lock</button>
-    <button class="m-btn m-btn-blue" onclick="showAnnounceInput()">📢 E'lon joylash</button>
-    <button class="m-btn m-btn-green" onclick="sendSys('unlock')">✅ Lockni ochish</button>
-    <button class="m-btn m-btn-default" onclick="changeTheme('purple')">🟣 Binafsha tema</button>
-    <button class="m-btn m-btn-default" onclick="changeTheme('teal')">🟢 Yashil tema</button>
-    <button class="m-btn m-btn-default" onclick="changeTheme('rose')">🔴 Qizil tema</button>
-    <button class="m-btn m-btn-default" onclick="changeTheme('default')">⚫ Standart tema</button>
-    <button class="m-btn m-btn-red m-btn-full" onclick="confirmKick()">⚡ Emergency Exit (Barchani chiqarish)</button>
+<!-- ADMIN MODAL (faqat admin ko'radi) -->
+<div id="adm-modal" class="modal-bg" onclick="bgClose(event,'adm-modal')">
+<div class="modal-sh" onclick="event.stopPropagation()">
+  <div class="msh-title red">⚙&nbsp;Admin Boshqaruvi</div>
+  <div class="msh-grid">
+    <button class="mb mb-d" onclick="sys('clear')">🗑 Log tozalash</button>
+    <button class="mb mb-d" onclick="doLock()">🔒 Chat lock/unlock</button>
+    <button class="mb mb-b" onclick="doAnnounce()">📢 E'lon joylash</button>
+    <button class="mb mb-g" onclick="doExport();closeModal('adm-modal')">💾 Eksport qilish</button>
+    <button class="mb mb-v" onclick="sys('theme','purple')">🟣 Binafsha tema</button>
+    <button class="mb mb-b" onclick="sys('theme','teal')">🩵 Moviy-yashil tema</button>
+    <button class="mb mb-d" onclick="sys('theme','blue')">🔵 Ko'k tema</button>
+    <button class="mb mb-d" onclick="sys('theme','default')">⚫ Standart tema</button>
+    <button class="mb mb-r mb-full" onclick="doKick()">🚨 Emergency — Barchani chiqarish</button>
   </div>
-  <button class="modal-close" onclick="closeModal('admin-modal')">Yopish</button>
+  <button class="mb-close" onclick="closeModal('adm-modal')">Yopish</button>
 </div>
 </div>
 
-<!-- HELPER MODAL -->
-<div id="helper-modal" onclick="closeModalBg(event,'helper-modal')">
-<div class="modal-sheet" onclick="event.stopPropagation()">
-  <div class="modal-title blue">🛡 Helper Vositalari</div>
-  <div class="modal-grid">
-    <button class="m-btn m-btn-default" onclick="sendSys('clear')">🗑 Log tozalash</button>
-    <button class="m-btn m-btn-blue" onclick="changeTheme('teal')">🟢 Yashil tema</button>
-    <button class="m-btn m-btn-blue" onclick="changeTheme('default')">⚫ Standart tema</button>
-    <button class="m-btn m-btn-default" onclick="exportChat()">💾 Eksport</button>
+<!-- HELPER MODAL (faqat helper ko'radi) -->
+<div id="hlp-modal" class="modal-bg" onclick="bgClose(event,'hlp-modal')">
+<div class="modal-sh" onclick="event.stopPropagation()">
+  <div class="msh-title blue">🛡&nbsp;Helper Vositalari</div>
+  <div class="msh-grid">
+    <button class="mb mb-d" onclick="sys('clear');closeModal('hlp-modal')">🗑 Log tozalash</button>
+    <button class="mb mb-g" onclick="doExport();closeModal('hlp-modal')">💾 Eksport</button>
+    <button class="mb mb-b" onclick="sys('theme','teal');closeModal('hlp-modal')">🩵 Moviy tema</button>
+    <button class="mb mb-d" onclick="sys('theme','default');closeModal('hlp-modal')">⚫ Standart tema</button>
   </div>
-  <button class="modal-close" onclick="closeModal('helper-modal')">Yopish</button>
+  <button class="mb-close" onclick="closeModal('hlp-modal')">Yopish</button>
 </div>
 </div>
 
-<!-- TOAST -->
 <div id="toast"></div>
 
 <script>
-const ABLY_KEY = '7k7eJQ.wlzQCA:mT1OA_HGf29bZrs8s_kMJ2K39lR6UgNr1aOGks7ttds';
-const ENC_KEY = 'WHOAMI_SEC_2026';
+const ABLY_KEY='7k7eJQ.wlzQCA:mT1OA_HGf29bZrs8s_kMJ2K39lR6UgNr1aOGks7ttds';
+const EK='WHOAMI_SEC_V4_2026';
 
-const ADMINS = [{nick:'x-gab', pass:'6969'}];
-const HELPERS = [{nick:'helper', pass:'6996'}];
+const ADMINS=[{n:'x-gab',p:'6969'}];
+const HELPERS=[{n:'helper',p:'6996'}];
 
-let myNick='', myRole='user', myAv='🦊';
-let isStealth=false, chatLocked=false;
-let typingTimer=null, isTyping=false;
-let msgHistory=[];
-let dmTarget=null, dmHistory=[];
-let presenceList=[];
+let myNick='',myRole='user',myAv='🦊';
+let stealth=false,locked=false;
+let typing=false,tTimer=null;
+let hist=[],dmHist=[],dmTarget=null,dmTargetAv='';
+let presList=[];
 
-const ably = new Ably.Realtime(ABLY_KEY);
-const ch = ably.channels.get('whoami-sec-v3-main');
-const sysCh = ably.channels.get('whoami-sec-v3-sys');
-const dmCh = ably.channels.get('whoami-sec-v3-dm');
-const presCh = ably.channels.get('whoami-sec-v3-presence');
+const ably=new Ably.Realtime(ABLY_KEY);
+const mch=ably.channels.get('whoami-v4-main');
+const sch=ably.channels.get('whoami-v4-sys');
+const dch=ably.channels.get('whoami-v4-dm');
+const pch=ably.channels.get('whoami-v4-pres');
 
-function enc(t){return CryptoJS.AES.encrypt(t,ENC_KEY).toString()}
-function dec(c){try{const b=CryptoJS.AES.decrypt(c,ENC_KEY);return b.toString(CryptoJS.enc.Utf8)||null}catch{return null}}
+const enc=t=>CryptoJS.AES.encrypt(t,EK).toString();
+const dec=c=>{try{const b=CryptoJS.AES.decrypt(c,EK);return b.toString(CryptoJS.enc.Utf8)||null}catch{return null}};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const ts=()=>new Date().toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
 
-function selectAv(el){
-  document.querySelectorAll('.av-opt').forEach(e=>e.classList.remove('selected'));
-  el.classList.add('selected');
-  myAv = el.dataset.av;
+function pickAv(el){
+  document.querySelectorAll('.av-item').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');myAv=el.dataset.v;
 }
 
-function onNickInput(v){
-  const vl=v.toLowerCase();
-  const isSpecial = ADMINS.some(a=>a.nick===vl)||HELPERS.some(h=>h.nick===vl);
-  document.getElementById('pass-box').style.display=isSpecial?'block':'none';
-  document.getElementById('pass-hint').style.display=isSpecial?'block':'none';
+function onNik(v){
+  const vl=v.toLowerCase().trim();
+  const sp=ADMINS.some(a=>a.n===vl)||HELPERS.some(h=>h.n===vl);
+  document.getElementById('pbox').style.display=sp?'block':'none';
+  document.getElementById('phint').style.display=sp?'block':'none';
 }
 
 function doLogin(){
-  const nick=document.getElementById('nick-in').value.trim();
-  const pass=document.getElementById('pass-in').value;
-  const err=document.getElementById('login-err');
+  const nick=document.getElementById('nin').value.trim();
+  const pass=document.getElementById('pin').value;
+  const err=document.getElementById('lerr');
   if(!nick){err.textContent='Taxallus kiriting!';return}
-  if(nick.length<2){err.textContent='Kamida 2 harf!';return}
-
+  if(nick.length<2){err.textContent='Kamida 2 belgi!';return}
+  if(/[<>"'&]/.test(nick)){err.textContent='Noto\'g\'ri belgilar!';return}
   const vl=nick.toLowerCase();
   myRole='user';
-
-  const adminMatch=ADMINS.find(a=>a.nick===vl);
-  const helperMatch=HELPERS.find(h=>h.nick===vl);
-
-  if(adminMatch){
-    if(pass!==adminMatch.pass){err.textContent='Noto\'g\'ri parol!';return}
-    myRole='admin';
-  } else if(helperMatch){
-    if(pass!==helperMatch.pass){err.textContent='Noto\'g\'ri parol!';return}
-    myRole='helper';
-  }
-
-  myNick=nick;
-  err.textContent='';
+  const adm=ADMINS.find(a=>a.n===vl);
+  const hlp=HELPERS.find(h=>h.n===vl);
+  if(adm){if(pass!==adm.p){err.textContent='Noto\'g\'ri parol!';return}myRole='admin';}
+  else if(hlp){if(pass!==hlp.p){err.textContent='Noto\'g\'ri parol!';return}myRole='helper';}
+  myNick=nick;err.textContent='';
   startApp();
 }
 
 function startApp(){
-  document.getElementById('login-screen').classList.remove('active');
-  document.getElementById('app').classList.add('active');
+  document.getElementById('ls').classList.remove('on');
+  document.getElementById('app').classList.add('on');
+  if(myRole==='admin')document.getElementById('admb').style.display='block';
+  if(myRole==='helper')document.getElementById('hlpb').style.display='block';
 
-  if(myRole==='admin'){document.getElementById('adm-btn').style.display='block'}
-  if(myRole==='helper'){document.getElementById('hlp-btn').style.display='block'}
+  mch.subscribe('msg',m=>renderMsg(m.data));
+  sch.subscribe('sys',m=>handleSys(m.data));
+  dch.subscribe('dm',m=>handleDm(m.data));
+  mch.subscribe('typ',m=>handleTyp(m.data));
 
-  ch.subscribe('msg', m=>renderMsg(m.data));
-  sysCh.subscribe('sys', m=>handleSys(m.data));
-  dmCh.subscribe('dm', m=>handleDm(m.data));
-  ch.subscribe('typing', m=>handleTyping(m.data));
-
-  presCh.presence.enter({nick:myNick,role:myRole,av:myAv});
-  presCh.presence.subscribe(()=>updatePresence());
-  updatePresence();
+  pch.presence.enter({nick:myNick,role:myRole,av:myAv});
+  pch.presence.subscribe(()=>updatePres());
+  updatePres();
 
   if(myRole!=='admin'){
-    sysCh.publish('sys',{type:'join',nick:myNick,role:myRole,av:myAv});
+    sch.publish('sys',{t:'join',nick:myNick,role:myRole,av:myAv});
   }
-
-  addSysLog(`Xush kelibsiz, ${myNick}! AES-256 shifrlash faol.`,'warn');
-  document.getElementById('msg-input').focus();
+  syslog(`Xush kelibsiz, ${myNick}! Shifrlash faol.`,'w');
+  document.getElementById('min').focus();
 }
 
 function renderMsg(d){
-  if(!d||!d.nick) return;
+  if(!d||!d.nick)return;
+  const t=dec(d.text);if(t===null)return;
+  const own=d.nick===myNick&&!d.ghost;
+  const rl=d.role;
+  const nc=rl==='admin'?'na':rl==='helper'?'nh':'nu';
+  const tc=rl==='admin'?'is-adm':rl==='helper'?'is-hlp':'';
+  const dc=rl==='admin'?'rd-adm':rl==='helper'?'rd-hlp':'rd-usr';
+  const badge=rl==='admin'?`<span class="mbadge ba">ADMIN</span><span class="admin-title">ROOT</span>`:rl==='helper'?`<span class="mbadge bh">HELPER</span>`:'';
   const box=document.getElementById('msgs');
-  const t=dec(d.text);
-  if(t===null) return;
-  const isOwn=d.nick===myNick&&!isStealth;
-  const roleClass=d.role==='admin'?'nick-admin':d.role==='helper'?'nick-helper':'nick-user';
-  const badge=d.role==='admin'?'<span class="msg-role-badge badge-admin">ADMIN</span>':d.role==='helper'?'<span class="msg-role-badge badge-helper">HELPER</span>':'';
-  const time=new Date(d.ts).toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
-  const div=document.createElement('div');
-  div.className='msg'+(isOwn?' own':'');
-  div.innerHTML=`<div class="msg-av">${d.av||'👤'}</div><div class="msg-body"><div class="msg-header"><span class="msg-nick ${roleClass}">${esc(d.nick)}</span>${badge}<span class="msg-time">${time}</span></div><div class="msg-text">${esc(t)}</div></div>`;
-  box.appendChild(div);
-  box.scrollTop=box.scrollHeight;
-  msgHistory.push({nick:d.nick,role:d.role,text:t,time});
+  const el=document.createElement('div');
+  el.className='msg'+(own?' own':'');
+  el.innerHTML=`
+    <div class="mav">${esc(d.av||'👤')}<div class="role-dot ${dc}"></div></div>
+    <div class="mbody">
+      <div class="mhead">
+        <span class="mnick ${nc}">${esc(d.nick)}</span>${badge}
+        <span class="mtime">${ts()}</span>
+      </div>
+      <div class="mtext ${tc}">${esc(t)}</div>
+    </div>`;
+  box.appendChild(el);box.scrollTop=box.scrollHeight;
+  hist.push({nick:d.nick,role:rl,text:t,time:ts()});
 }
 
 function sendMsg(){
-  const inp=document.getElementById('msg-input');
-  const text=inp.value.trim();
-  if(!text) return;
-  if(chatLocked&&myRole!=='admin'){toast('Chat hozir bloklangan!');return}
-  const displayNick=isStealth?'anon_'+Math.random().toString(36).slice(2,6):myNick;
-  const displayRole=isStealth?'user':myRole;
-  const displayAv=isStealth?'🎭':myAv;
-  ch.publish('msg',{nick:displayNick,av:displayAv,role:displayRole,text:enc(text),ts:Date.now()});
-  inp.value='';inp.style.height='';
-  stopTyping();
+  const inp=document.getElementById('min');
+  const v=inp.value.trim();
+  if(!v)return;
+  if(locked&&myRole!=='admin'){toast('Chat hozir bloklangan!');return}
+  const g=stealth;
+  const dn=g?'anon_'+Math.random().toString(36).slice(2,5):myNick;
+  const dr=g?'user':myRole;
+  const da=g?'🎭':myAv;
+  mch.publish('msg',{nick:dn,av:da,role:dr,text:enc(v),ghost:g,ts:Date.now()});
+  inp.value='';inp.style.height='';stopTyp();
 }
 
 function handleSys(d){
-  if(!d) return;
-  if(d.type==='join'){
-    addSysLog(`${d.av||'👤'} ${d.nick} [${d.role}] tizimga kirdi`,'join');
-  } else if(d.type==='leave'){
-    addSysLog(`${d.nick} tizimdan chiqdi`,'leave');
-  } else if(d.type==='clear'){
-    document.getElementById('msgs').innerHTML='';
-    addSysLog('Chat tozalandi','warn');
-  } else if(d.type==='lock'){
-    chatLocked=true;addSysLog('Chat bloklandi — faqat admin yoza oladi','warn');
-  } else if(d.type==='unlock'){
-    chatLocked=false;addSysLog('Chat bloki olib tashlandi','join');
-  } else if(d.type==='theme'){
-    applyTheme(d.color);
-  } else if(d.type==='announce'){
-    const bar=document.getElementById('announce-bar');
-    bar.textContent='📢 '+d.text;bar.className='active';
-    setTimeout(()=>bar.className='',8000);
-  } else if(d.type==='kick'){
+  if(!d)return;
+  const t=d.t;
+  if(t==='join')syslog(`${d.av||'👤'} ${d.nick} kirdi`,'j');
+  else if(t==='leave')syslog(`${d.nick} chiqdi`,'l');
+  else if(t==='clear'){document.getElementById('msgs').innerHTML='';syslog('Chat tozalandi','w')}
+  else if(t==='lock'){locked=true;syslog('Chat bloklandi — faqat admin yoza oladi','w')}
+  else if(t==='unlock'){locked=false;syslog('Chat bloki olib tashlandi','j')}
+  else if(t==='announce'){const a=document.getElementById('ann');a.textContent='📢 '+d.txt;a.classList.add('on');setTimeout(()=>a.classList.remove('on'),9000)}
+  else if(t==='theme')applyTheme(d.c);
+  else if(t==='kick'){
     if(myRole!=='admin'){
-      document.body.innerHTML=`<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#0d0d1a;color:#f87171;text-align:center;gap:20px;font-family:system-ui"><div style="font-size:28px">🚨</div><h2 style="letter-spacing:2px">CHAT YOPILDI</h2><p style="color:rgba(255,255,255,.4);font-size:14px">Admin tomonidan chiqarilgansiz.<br>5 soniyadan keyin qayta yuklanadi.</p></div>`;
+      document.body.innerHTML=`<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#080b14;color:#f87171;text-align:center;gap:16px;font-family:system-ui;padding:24px"><div style="font-size:40px">🚨</div><h2 style="letter-spacing:3px;font-size:18px">SESSION YAKUNLANDI</h2><p style="color:rgba(255,255,255,.35);font-size:13px;line-height:1.8">Tizimdan chiqarildingiz.<br>5 soniyadan keyin qayta yuklanadi.</p></div>`;
       setTimeout(()=>location.reload(),5000);
     }
   }
 }
 
 function handleDm(d){
-  if(!d) return;
-  if(d.to===myNick||d.from===myNick){
-    const t=dec(d.text);
-    if(!t) return;
-    dmHistory.push(d);
-    if(dmTarget&&(d.from===dmTarget||d.to===dmTarget)){
-      renderDmMsg(d,t);
-    } else if(d.from!==myNick){
-      toast(`📩 ${d.from}: ${t.slice(0,30)}`);
-    }
+  if(!d)return;
+  if(d.to!==myNick&&d.from!==myNick)return;
+  const t=dec(d.text);if(!t)return;
+  dmHist.push({...d,dec:t});
+  if(dmTarget&&(d.from===dmTarget||d.to===dmTarget)){
+    renderDmMsg(d,t);
+  } else if(d.from!==myNick){
+    toast(`📩 ${d.from}: ${t.slice(0,28)}${t.length>28?'…':''}`);
   }
 }
 
-function openDm(targetNick,targetAv){
-  if(targetNick===myNick) return;
-  dmTarget=targetNick;
-  document.getElementById('dm-title').textContent=targetAv+' '+targetNick+' bilan shaxsiy chat';
-  document.getElementById('dm-av').textContent=targetAv;
-  document.getElementById('dm-msgs').innerHTML='';
-  dmHistory.filter(d=>(d.from===targetNick&&d.to===myNick)||(d.from===myNick&&d.to===targetNick))
-    .forEach(d=>renderDmMsg(d,dec(d.text)));
-  document.getElementById('dm-overlay').classList.add('active');
-  document.getElementById('dm-input').focus();
+function openDm(tnick,tav){
+  if(tnick===myNick)return;
+  dmTarget=tnick;dmTargetAv=tav||'👤';
+  document.getElementById('dmttl').textContent=tav+' '+tnick+' — shaxsiy chat';
+  document.getElementById('dmav').textContent=tav||'👤';
+  const box=document.getElementById('dmmsgs');
+  box.innerHTML='';
+  dmHist.filter(d=>(d.from===tnick&&d.to===myNick)||(d.from===myNick&&d.to===tnick))
+    .forEach(d=>renderDmMsg(d,d.dec));
+  document.getElementById('dmov').classList.add('on');
+  document.getElementById('dmin').focus();
+  if(window.innerWidth<=600)closeSbMob();
 }
 
 function renderDmMsg(d,t){
-  if(!t) return;
-  const box=document.getElementById('dm-msgs');
-  const isOwn=d.from===myNick;
-  const time=new Date(d.ts).toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
-  box.innerHTML+=`<div style="display:flex;flex-direction:${isOwn?'row-reverse':'row'};gap:8px;margin-bottom:10px"><div style="font-size:18px">${d.av||'👤'}</div><div><div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:3px;text-align:${isOwn?'right':'left'}">${esc(d.from)} · ${time}</div><div style="font-size:13px;padding:8px 12px;border-radius:12px;max-width:260px;background:${isOwn?'rgba(124,58,237,.25)':'rgba(255,255,255,.07)'};border:1px solid ${isOwn?'rgba(124,58,237,.3)':'rgba(255,255,255,.08)'}">${esc(t)}</div></div></div>`;
+  if(!t)return;
+  const own=d.from===myNick;
+  const box=document.getElementById('dmmsgs');
+  box.innerHTML+=`<div style="display:flex;flex-direction:${own?'row-reverse':'row'};gap:9px;margin-bottom:12px;animation:up .2s ease">
+    <div style="font-size:20px;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:flex-start">${esc(d.av||'👤')}</div>
+    <div>
+      <div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:4px;text-align:${own?'right':'left'}">${esc(d.from)}&nbsp;·&nbsp;${new Date(d.ts).toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'})}</div>
+      <div style="font-size:13px;padding:9px 13px;border-radius:${own?'14px 4px 14px 14px':'4px 14px 14px 14px'};max-width:240px;background:${own?'rgba(124,58,237,.22)':'rgba(255,255,255,.07)'};border:1px solid ${own?'rgba(124,58,237,.3)':'rgba(255,255,255,.08)'};color:${own?'#e0d9ff':'rgba(255,255,255,.85)'};word-break:break-word">${esc(t)}</div>
+    </div>
+  </div>`;
   box.scrollTop=box.scrollHeight;
 }
 
 function sendDm(){
-  const inp=document.getElementById('dm-input');
-  const text=inp.value.trim();
-  if(!text||!dmTarget) return;
-  dmCh.publish('dm',{from:myNick,to:dmTarget,av:myAv,text:enc(text),ts:Date.now()});
-  inp.value='';
+  const inp=document.getElementById('dmin');
+  const v=inp.value.trim();
+  if(!v||!dmTarget)return;
+  dch.publish('dm',{from:myNick,to:dmTarget,av:myAv,text:enc(v),ts:Date.now()});
+  inp.value='';inp.style.height='';
 }
 
-function closeDm(){document.getElementById('dm-overlay').classList.remove('active');dmTarget=null}
+function closeDm(){document.getElementById('dmov').classList.remove('on');dmTarget=null}
+function dmKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendDm()}}
+function msgKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}}
+function autoH(el){el.style.height='';el.style.height=Math.min(el.scrollHeight,110)+'px'}
 
-document.getElementById('dm-input').addEventListener('keypress',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendDm()}});
-
-function handleTyping(d){
-  if(d.nick===myNick) return;
-  const bar=document.getElementById('typing-bar');
-  if(d.typing) bar.textContent=d.nick+' yozmoqda...';
-  else bar.textContent='';
+function handleTyp(d){
+  if(d.nick===myNick)return;
+  const b=document.getElementById('tybar');
+  b.textContent=d.on?d.nick+' yozmoqda...':'';
 }
-
-function onInput(el){
-  el.style.height='';el.style.height=Math.min(el.scrollHeight,100)+'px';
-  if(!isTyping){isTyping=true;ch.publish('typing',{nick:myNick,typing:true})}
-  clearTimeout(typingTimer);typingTimer=setTimeout(stopTyping,2000);
-}
-
-document.getElementById('msg-input').addEventListener('keypress',e=>{
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}
+document.getElementById('min').addEventListener('input',()=>{
+  if(!typing){typing=true;mch.publish('typ',{nick:myNick,on:true})}
+  clearTimeout(tTimer);tTimer=setTimeout(stopTyp,2200);
 });
+function stopTyp(){typing=false;mch.publish('typ',{nick:myNick,on:false})}
 
-function stopTyping(){isTyping=false;ch.publish('typing',{nick:myNick,typing:false})}
-
-function updatePresence(){
-  presCh.presence.get((err,members)=>{
-    if(err) return;
-    presenceList=members;
-    document.getElementById('online-count').textContent=members.length;
-    const list=document.getElementById('users-list');
-    list.innerHTML=members.map(m=>{
-      const role=m.data.role||'user';
-      const av=m.data.av||'👤';
-      const isMe=m.data.nick===myNick;
-      const roleTag=role==='admin'?'<span class="user-role-tag role-admin">ADMIN</span>':role==='helper'?'<span class="user-role-tag role-helper">HELPER</span>':'<span class="user-role-tag role-user">USER</span>';
-      return `<div class="user-item ${isMe?'':'clickable-dm'}" ${isMe?'':'onclick="openDm(\''+esc(m.data.nick)+'\',\''+av+'\')"'} title="${isMe?'Bu siz':'Shaxsiy chat ochish'}">
-        <div class="user-av">${av}</div>
-        <span class="user-nick">${esc(m.data.nick)}${isMe?' (siz)':''}</span>
-        ${roleTag}
+function updatePres(){
+  pch.presence.get((e,m)=>{
+    if(e)return;presList=m;
+    document.getElementById('ocnt').textContent=m.length;
+    const ul=document.getElementById('ulist');
+    ul.innerHTML=m.map(u=>{
+      const r=u.data.role||'user';
+      const a=u.data.av||'👤';
+      const isMe=u.data.nick===myNick;
+      const rtag=r==='admin'?'<span class="utag ta">ADMIN</span>':r==='helper'?'<span class="utag th">HELPER</span>':'<span class="utag tu">USER</span>';
+      const dmhint=isMe?'':'<span class="dm-hint">DM ➤</span>';
+      return `<div class="uitem ${isMe?'no-dm':''}" ${isMe?'':('onclick="openDm(\''+esc(u.data.nick)+'\',\''+a+'\')"')}>
+        <div class="uav">${a}</div>
+        <span class="uname">${esc(u.data.nick)}${isMe?' ·siz':''}</span>
+        ${rtag}${dmhint}
       </div>`;
     }).join('');
   });
 }
+setInterval(updatePres,9000);
 
-setInterval(updatePresence,8000);
-
-function addSysLog(text,type=''){
-  const box=document.getElementById('msgs');
-  box.innerHTML+=`<div class="sys-log ${type}">${text}</div>`;
-  box.scrollTop=box.scrollHeight;
+function syslog(txt,tp){
+  const b=document.getElementById('msgs');
+  const cl=tp==='j'?'sl-j':tp==='l'?'sl-l':'sl-w';
+  b.innerHTML+=`<div class="syslog ${cl}">${txt}</div>`;
+  b.scrollTop=b.scrollHeight;
 }
 
-function toggleSidebar(){
-  const s=document.getElementById('sidebar');
-  if(window.innerWidth<=600){s.classList.toggle('mobile-open')}
-  else{s.classList.toggle('hidden')}
+function sys(t,c){
+  sch.publish('sys',{t,c});
 }
 
-function toggleStealth(){
-  isStealth=!isStealth;
-  document.getElementById('stealth-lbl').textContent=isStealth?'on':'off';
-  toast(isStealth?'Niqob yoqildi — anonim rejim':'Niqob o\'chirildi');
-}
-
-function exportChat(){
-  if(!msgHistory.length){toast('Eksport qilish uchun xabar yo\'q');return}
-  const txt=msgHistory.map(m=>`[${m.time}] ${m.nick} (${m.role}): ${m.text}`).join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));
-  a.download='whoami-chat-'+Date.now()+'.txt';a.click();
-  toast('Chat saqlandi!');closeModal('admin-modal');closeModal('helper-modal');
-}
-
-function clearMine(){
-  document.querySelectorAll('.msg.own').forEach(e=>e.remove());
-  toast('O\'z xabarlaringiz o\'chirildi (lokal)');
-}
-
-function sendSys(type){sysCh.publish('sys',{type});closeModal('admin-modal');closeModal('helper-modal')}
-
-function toggleLock(){
-  chatLocked=!chatLocked;
-  sysCh.publish('sys',{type:chatLocked?'lock':'unlock'});
-  closeModal('admin-modal');
-}
-
-function confirmKick(){
-  if(confirm('Haqiqatan ham barchani chiqarmoqchimisiz?')){
-    sysCh.publish('sys',{type:'kick'});closeModal('admin-modal');
+function toggleSb(){
+  const s=document.getElementById('sb');
+  if(window.innerWidth<=600){
+    s.classList.remove('off');s.classList.toggle('mob');
+  } else {
+    s.classList.toggle('off');
   }
 }
+function closeSbMob(){document.getElementById('sb').classList.remove('mob')}
 
-function showAnnounceInput(){
-  const txt=prompt('E\'lon matni:');
-  if(txt&&txt.trim()){sysCh.publish('sys',{type:'announce',text:txt.trim()});closeModal('admin-modal')}
+function doStealth(){
+  stealth=!stealth;
+  document.getElementById('stlbl').textContent=stealth?'on':'off';
+  toast(stealth?'Niqob yoqildi — anonim rejim faol':'Niqob o\'chirildi');
 }
-
-function changeTheme(c){sysCh.publish('sys',{type:'theme',color:c});closeModal('admin-modal');closeModal('helper-modal')}
-
+function doExport(){
+  if(!hist.length){toast('Eksport uchun xabar yo\'q');return}
+  const t=hist.map(h=>`[${h.time}] ${h.nick} (${h.role}): ${h.text}`).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));
+  a.download=`whoami-${Date.now()}.txt`;a.click();
+  toast('Chat saqlandi!');
+}
+function doLock(){
+  locked=!locked;sys(locked?'lock':'unlock');closeModal('adm-modal');
+}
+function doAnnounce(){
+  const t=prompt('E\'lon matni:');
+  if(t&&t.trim()){sch.publish('sys',{t:'announce',txt:t.trim()});closeModal('adm-modal')}
+}
+function doKick(){
+  if(confirm('Haqiqatan barchani chiqarmoqchimisiz?')){sys('kick');closeModal('adm-modal')}
+}
 function applyTheme(c){
-  document.body.style.background={
-    purple:'linear-gradient(135deg,#0d0d1a 0%,#1a0a28 40%,#0d0d1a 100%)',
-    teal:'linear-gradient(135deg,#0a1a1a 0%,#0a2822 40%,#0a1a1a 100%)',
-    rose:'linear-gradient(135deg,#1a0d0d 0%,#280a0a 40%,#1a0d0d 100%)',
-    default:'linear-gradient(135deg,#0d0d1a 0%,#0a1628 40%,#0d0d1a 100%)'
-  }[c]||'linear-gradient(135deg,#0d0d1a 0%,#0a1628 40%,#0d0d1a 100%)';
+  const map={
+    purple:'radial-gradient(ellipse 60% 50% at 15% 15%,rgba(139,92,246,.22) 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 85% 85%,rgba(99,102,241,.18) 0%,transparent 60%)',
+    teal:'radial-gradient(ellipse 60% 50% at 20% 20%,rgba(20,184,166,.2) 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 80% 80%,rgba(6,182,212,.15) 0%,transparent 60%)',
+    blue:'radial-gradient(ellipse 60% 50% at 15% 15%,rgba(59,130,246,.2) 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 85% 85%,rgba(56,189,248,.14) 0%,transparent 60%)',
+    default:'radial-gradient(ellipse 60% 50% at 15% 15%,rgba(99,102,241,.18) 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 85% 85%,rgba(139,92,246,.14) 0%,transparent 60%)'
+  };
+  document.body.style.setProperty('--bg-extra',map[c]||map.default);
+  document.querySelector('body::before');
+  document.body.setAttribute('data-theme',c);
 }
 
-function openModal(id){document.getElementById(id).classList.add('active')}
-function closeModal(id){document.getElementById(id).classList.remove('active')}
-function closeModalBg(e,id){if(e.target===document.getElementById(id))closeModal(id)}
+function openModal(id){document.getElementById(id).classList.add('on')}
+function closeModal(id){document.getElementById(id).classList.remove('on')}
+function bgClose(e,id){if(e.target===document.getElementById(id))closeModal(id)}
 
 function toast(msg){
   const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);
+  t.textContent=msg;t.classList.add('on');
+  clearTimeout(t._);t._=setTimeout(()=>t.classList.remove('on'),3200);
 }
-
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 </script>
 </body>
 </html>
